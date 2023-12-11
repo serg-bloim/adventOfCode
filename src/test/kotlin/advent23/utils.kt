@@ -216,5 +216,5 @@ fun <E> List<E>.permutations2(): Sequence<Pair<E, E>> {
 
 
 val dbg = PrintStream(System.getProperty("user.dir") + "/src/test/resources/advent23/dbg.txt")
-val result = PrintStream(System.getProperty("user.dir") + "/src/test/resources/advent/result.txt")
+val result = PrintStream(System.getProperty("user.dir") + "/src/test/resources/advent23/result.txt")
 
