@@ -3,7 +3,6 @@ package advent23
 import org.junit.jupiter.api.Test
 import kotlin.io.path.Path
 import kotlin.io.path.createFile
-import kotlin.test.assertEquals
 
 class Day {
     internal class Task1 {
@@ -12,14 +11,14 @@ class Day {
             val actual = Solution.solve(load_test())
             println("Result: $actual")
             result.println("Result: $actual")
-            assertEquals("12345", actual)
+            assertEquals(12345, actual)
         }
 
         @Test
         fun testReal() {
             val actual = Solution.solve(load_prod())
             println("Result: $actual")
-            assertEquals("VCTFTJQCG", actual)
+            assertEquals(12345, actual)
         }
 
     }

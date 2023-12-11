@@ -2,7 +2,7 @@ package advent23
 
 import org.junit.jupiter.api.Test
 import kotlin.math.absoluteValue
-import kotlin.test.assertEquals
+import kotlin.system.measureTimeMillis
 
 class Day11 {
     internal class Task1 {
@@ -16,9 +16,14 @@ class Day11 {
 
         @Test
         fun testReal() {
-            val actual = Solution.sumDistances(load_prod(), 2)
+            val txt = load_prod()
+            var actual: Any
+            val elapsed = measureTimeMillis {
+                actual = Solution.sumDistances(txt, 2)
+            }
+            println("Execution: $elapsed")
             println("Result: $actual")
-            assertEquals(10292708, actual)
+            kotlin.test.assertEquals(266083745548L, actual)
         }
 
     }
@@ -34,9 +39,16 @@ class Day11 {
 
         @Test
         fun testReal() {
-            val actual = Solution.sumDistances(load_prod(), 1000000)
+            val txt = load_prod()
+            var actual: Any
+//            actual = Solution.sumDistances(txt, 1000000)
+//            actual = Solution.sumDistances(txt, 1000000)
+            val elapsed = measureTimeMillis {
+                actual = Solution.sumDistances(txt, 1000000)
+            }
+            println("Execution: $elapsed ms")
             println("Result: $actual")
-            assertEquals(10292708, actual)
+            kotlin.test.assertEquals(266083745548, actual)
         }
 
     }
@@ -78,9 +90,19 @@ class Day11 {
                     }
                 }
             }
-            val distSum = galaxies.permutations2().map { (a, b) -> a.dist(b).toLong() }.sum()
-            return distSum
+            val galaxiesClustersPerX = galaxies.groupingBy { it.x }.eachCount()
+            val galaxiesClustersPerY = galaxies.groupingBy { it.y }.eachCount()
+            val sumPerX = distBetweenClusters(galaxiesClustersPerX)
+            val sumPerY = distBetweenClusters(galaxiesClustersPerY)
+            return sumPerX + sumPerY
         }
+
+        fun distBetweenClusters(galaxiesPerX: Map<Int, Int>) =
+            galaxiesPerX.entries.toList().permutations2().map { (cluster1, cluster2) ->
+                val (coord1, n1) = cluster1
+                val (coord2, n2) = cluster2
+                (coord2 - coord1).absoluteValue.toLong() * n1 * n2
+            }.sum()
 
         private fun isEmpty(line: Sequence<Char>) = line.all { it == '.' }
     }

@@ -204,17 +204,22 @@ fun leastCommonMultiple(a: Long, b: Long): Long {
 }
 
 fun <E> List<E>.permutations2(): Sequence<Pair<E, E>> {
+    val list = this
     return sequence {
-        var rest = this@permutations2
-        while (rest.size > 1) {
-            val first = rest.first()
-            rest = rest.subList(1, rest.size)
-            yieldAll(rest.asSequence().map { Pair(first, it) })
+        for (i in list.indices) {
+            for (j in i + 1..<list.size) {
+                yield(Pair(list[i], list[j]))
+            }
         }
     }
 }
 
+fun assertEquals(expected: Any?, actual: Any?, message: String? = null) {
+    val expected = if (expected is Int) expected.toLong() else expected
+    val actual = if (actual is Int) actual.toLong() else actual
+    kotlin.test.assertEquals(expected, actual, message)
+}
 
-val dbg = PrintStream(System.getProperty("user.dir") + "/src/test/resources/advent23/dbg.txt")
-val result = PrintStream(System.getProperty("user.dir") + "/src/test/resources/advent23/result.txt")
+val dbg = PrintStream(System.getProperty("user.dir") + "/dbg.txt")
+val result = PrintStream(System.getProperty("user.dir") + "/result.txt")
 
