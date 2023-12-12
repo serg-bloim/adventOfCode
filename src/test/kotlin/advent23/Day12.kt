@@ -22,6 +22,34 @@ class Day12 {
 
     }
 
+    internal class Task2 {
+
+        @Test
+        fun testSmall() {
+            val actual = Solution.solve(inputX5(load_test()))
+            result.println("Result: $actual")
+            println("Cache hits: ${Cache.hits}")
+            assertEquals(525152, actual)
+        }
+
+        @Test
+        fun testReal() {
+            val actual = Solution.solve(inputX5(load_prod()))
+            println("Result: $actual")
+            println("Cache hits: ${Cache.hits}")
+            assertEquals(850504257483930, actual)
+        }
+
+        private fun inputX5(txt: String) = txt
+            .lineSequence()
+            .map { line ->
+                val (mask, pattern) = line.split(' ')
+                val maskX5 = listOf(mask).repeatForever().take(5).joinToString("?")
+                val patternX5 = listOf(pattern).repeatForever().take(5).joinToString(",")
+                maskX5 + " " + patternX5
+            }.joinToString("\n")
+    }
+
     object Solution {
         fun solve(txt: String): Any {
             return txt.lineSequence()
@@ -41,6 +69,8 @@ class Day12 {
             if (pattern.isEmpty()) {
                 return if (mask.all { it.canBeOperational() }) 1 else 0
             }
+            val cacheKey = mask.joinToString() + pattern.joinToString()
+            Cache.find(cacheKey)?.let { return it }
             val start = mask.indexOfFirst { it != '.' }.takeUnless { it == -1 } ?: 0
             val blockLen = pattern.first()
             if (mask.size - start < minSizeRequired(pattern)) return 0
@@ -58,9 +88,9 @@ class Day12 {
                 if (fitsContiguousBlock(mask, start, blockLen)) {
                     res += countArrangements(mask.skipStart(start + blockLen + 1), pattern.skipStart(1))
                 }
-                res += countArrangements(mask.skipStart(start + 1), pattern)
-                res
+                res + countArrangements(mask.skipStart(start + 1), pattern)
             }
+            Cache.put(cacheKey, retValue)
             return retValue
         }
 
@@ -76,6 +106,18 @@ class Day12 {
 
         fun Char.canBeDamaged() = this == '#' || this == '?'
         fun Char.canBeOperational() = this == '.' || this == '?'
+    }
+
+    object Cache {
+        val map = mutableMapOf<String, Long>()
+        var hits = 0
+        fun find(key: String): Long? {
+            return map[key]?.also { hits++ }
+        }
+
+        fun put(key: String, value: Long) {
+            map[key] = value
+        }
     }
 
     companion object {
