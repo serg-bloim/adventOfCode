@@ -21,14 +21,32 @@ class Day13 {
         }
 
     }
+
+    internal class Task2 {
+        @Test
+        fun testSmall() {
+            val actual = Solution.sumReflections(load_test(), 1)
+            println("Result: $actual")
+            result.println("Result: $actual")
+            assertEquals(400, actual)
+        }
+
+        @Test
+        fun testReal() {
+            val actual = Solution.sumReflections(load_prod(), 1)
+            println("Result: $actual")
+            assertEquals(30449, actual)
+        }
+    }
+
     object Solution {
-        fun sumReflections(txt: String): Any {
+        fun sumReflections(txt: String, smudges: Int = 0): Any {
             val total = txt.lineSequence()
                 .map { it.trim() }
                 .chunked { it.isEmpty() }
                 .map { block ->
-                    val verticalReflections = findReflections(block).toList()
-                    val horizontalReflections = findReflections(transpose(block).asSequence()).toList()
+                    val horizontalReflections = findReflections(block.toList(), smudges).toList()
+                    val verticalReflections = findReflections(transpose(block), smudges).toList()
 
                     verticalReflections.sum() + horizontalReflections.sum() * 100
                 }.sum()
@@ -47,31 +65,26 @@ class Day13 {
             return rows.map { it.toString() }
         }
 
-        private fun findReflections(block: Sequence<CharSequence>): Sequence<Int> {
-            return block.map { reflectionsInLine(it).toSet() }
-                .reduce { a, b -> a.intersect(b) }
-                .asSequence()
-        }
-
-        private fun reflectionsInLine(line: CharSequence): Sequence<Int> {
-            return sequence {
-                for (split in 0..<line.length - 1) {
-                    var left = split
-                    var right = left + 1
-                    var hasReflection = true
-                    while (left >= 0 && right < line.length) {
-                        if (line[left] != line[right]) {
-                            hasReflection = false
-                            break
-                        }
-                        left--
-                        right++
-                    }
-                    if (hasReflection) {
-                        yield(split + 1)
-                    }
+        private fun findReflections(block: List<CharSequence>, smudges: Int): Sequence<Int> {
+            for (split in 0..<block.size - 1) {
+                var left = split
+                var right = left + 1
+                var differences = 0
+                while (left >= 0 && right < block.size) {
+                    differences += diff(block[left], block[right])
+                    if (differences > smudges) break
+                    left--
+                    right++
+                }
+                if (differences == smudges) {
+                    return sequenceOf(split + 1)
                 }
             }
+            return sequenceOf(0)
+        }
+
+        private fun diff(str1: CharSequence, str2: CharSequence): Int {
+            return str1.zip(str2) { a, b -> if (a == b) 0 else 1 }.sum()
         }
     }
 
@@ -118,6 +131,20 @@ class Day13 {
             val actual = Solution.sumReflections(txt)
             assertEquals(100, actual)
         }
+
+        @Test
+        fun testSingleBlock2() {
+            val txt = """
+                    #.##..##.
+                    ..#.##.#.
+                    ##......#
+                    ##......#
+                    ..#.##.#.
+                    ..##..##.
+                    #.#.##.#.
+            """.trimIndent()
+            val actual = Solution.sumReflections(txt, 1)
+            assertEquals(3, actual)
+        }
     }
 }
-
