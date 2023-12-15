@@ -55,34 +55,21 @@ class Day15 {
         }
 
         fun solve2(txt: String): Any {
-            val boxes = Array(256) { LinkedHashMap<String, Lens>() }
+            val boxes = Array(256) { LinkedHashMap<String, Int>() }
             val lensRe = Regex("""(\w+)(-|=)(\d*)""")
-            val lenses = txt.splitToSequence(',').map {
-                val ( lbl, op, focal) = lensRe.matchEntire(it)!!.destructured
-                Lens(lbl, op.first(), focal.takeIf { it.isNotEmpty() }?.toInt() ?: 0)
-            }
-            for (lens in lenses) {
-                val hsh = hash(lens.lbl)
-                val box = boxes[hsh]
-                if (lens.op == '-') {
-                    box.remove(lens.lbl)
-                }
-                if (lens.op == '=') {
-                    val existing = box[lens.lbl]
-                    if (existing != null) {
-                        existing.focal = lens.focal
-                    } else {
-                        box.put(lens.lbl, lens)
-                    }
+            txt.splitToSequence(',').forEach {
+                val (lbl, op, focal) = lensRe.matchEntire(it)!!.destructured
+                val box = boxes[hash(lbl)]
+                when (op.first()) {
+                    '-' -> box.remove(lbl)
+                    '=' -> box[lbl] = focal.toInt()
                 }
             }
-            var res = 0
-            for ((bi, box) in boxes.withIndex()) {
-                for ((li, lens) in box.values.withIndex()) {
-                    val lensFocal = (1 + bi) * (1 + li) * lens.focal
-                    res += lensFocal
-                }
-            }
+            val res = boxes.mapIndexed { bi, box ->
+                box.values.mapIndexed { li, focal ->
+                    (1 + bi) * (1 + li) * focal
+                }.sum()
+            }.sum()
             return res
         }
     }
