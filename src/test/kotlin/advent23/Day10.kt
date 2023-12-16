@@ -263,18 +263,5 @@ class Day10 {
         CounterClockwise
     }
 
-    enum class Direction {
-        North,
-        West,
-        South,
-        East, ;
-
-        fun reversed() = when (this) {
-            North -> South
-            West -> East
-            South -> North
-            East -> West
-        }
-    }
 }
 

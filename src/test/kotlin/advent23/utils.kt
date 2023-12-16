@@ -5,6 +5,10 @@ import java.io.PrintStream
 import kotlin.math.max
 import kotlin.test.assertEquals
 
+
+val dbg = PrintStream(System.getProperty("user.dir") + "/dbg.txt")
+val result = PrintStream(System.getProperty("user.dir") + "/result.txt")
+
 fun <T> Sequence<T>.chunked(predicate: (T) -> Boolean): Sequence<Sequence<T>> {
     val seq = this
     return sequence {
@@ -219,6 +223,24 @@ fun assertEquals(expected: Any?, actual: Any?, message: String? = null) {
 }
 
 fun <T> List<T>.skipStart(n: Int) = subList(n, size)
-val dbg = PrintStream(System.getProperty("user.dir") + "/dbg.txt")
-val result = PrintStream(System.getProperty("user.dir") + "/result.txt")
 
+enum class Direction {
+    North,
+    West,
+    South,
+    East, ;
+
+    fun reversed() = when (this) {
+        North -> South
+        West -> East
+        South -> North
+        East -> West
+    }
+
+    fun next() = when (this) {
+        North -> East
+        West -> North
+        South -> West
+        East -> South
+    }
+}
