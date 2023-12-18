@@ -22,42 +22,47 @@ class Day17 {
 
     }
 
+    data class Args(val x: Int, val y: Int, val straight: Int, val dir: Direction, val cost: Int)
     object Solution {
         fun solve(txt: String): Any {
             val city = txt.lines().map { it.map { it.digitToInt() } }
             val xMax = city.first().indices.last
             val yMax = city.indices.last
             val cache = Array(3) { Array(city.size) { IntArray(city.first().size) { Int.MAX_VALUE } } }
-            search(0, 0, 0, Direction.East, 0, city, cache)
+            val stack = Stack<Args>()
+            stack.push(Args(0, 0, 0, Direction.East, 0))
+            while (stack.isNotEmpty()) {
+                search(stack, city, cache)
+            }
             return cache.minOf { it[yMax][xMax] } - city[0][0]
         }
 
         private fun search(
-            x: Int,
-            y: Int,
-            straight: Int,
-            dir: Direction,
-            cost: Int,
+            stack: Stack<Args>,
             city: List<List<Int>>,
             cache: Array<Array<IntArray>>
         ) {
+            val (x, y, straight, dir, cost) = stack.pop()
             if (y !in city.indices || x !in city.first().indices) return
             val selfCost = city[y][x]
             val cacheCost = cache[straight][y][x]
             val currentCost = cost + selfCost
             if (currentCost >= cacheCost) return
-            cache[straight][y][x] = currentCost
-            if(straight < 2){
-                val (xNew, yNew) = move(x, y, dir)
-                search(xNew, yNew, straight+1, dir, currentCost, city, cache)
+            if (currentCost >= cache.last().last().last()) return
+            for (s in straight..2){
+                cache[s][y][x] = currentCost
             }
-            dir.right().let { dir->
+            dir.right().let { dir ->
                 val (xNew, yNew) = move(x, y, dir)
-                search(xNew, yNew, 0, dir, currentCost, city, cache)
+                stack.push(Args(xNew, yNew, 0, dir, currentCost))
             }
-            dir.left().let { dir->
+            dir.left().let { dir ->
                 val (xNew, yNew) = move(x, y, dir)
-                search(xNew, yNew, 0, dir, currentCost, city, cache)
+                stack.push(Args(xNew, yNew, 0, dir, currentCost))
+            }
+            if (straight < 2) {
+                val (xNew, yNew) = move(x, y, dir)
+                stack.push(Args(xNew, yNew, straight + 1, dir, currentCost))
             }
         }
 
