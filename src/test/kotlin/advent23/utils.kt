@@ -243,4 +243,14 @@ enum class Direction {
         South -> West
         East -> South
     }
+
+    fun right() = next()
+    fun left() = next().reversed()
+}
+
+fun move(x: Int, y: Int, dir: Direction) = when (dir) {
+    Direction.North -> Pair(x, y - 1)
+    Direction.West -> Pair(x - 1, y)
+    Direction.South -> Pair(x, y + 1)
+    Direction.East -> Pair(x + 1, y)
 }
