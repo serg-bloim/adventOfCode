@@ -5,6 +5,7 @@ import advent23.Day10.Helper.withinBox
 import advent23.Day10.Helper.x
 import advent23.Day10.Helper.y
 import org.junit.jupiter.api.Test
+import kotlin.math.min
 
 class Day17 {
     internal class Task1 {
@@ -25,15 +26,65 @@ class Day17 {
 
     }
 
+    internal class Task2 {
+        @Test
+        fun testSmall() {
+            val actual = Solution.solve(load_test(), 3, 10)
+            println("Result: $actual")
+            result.println("Result: $actual")
+            assertEquals(94, actual)
+        }
+
+        @Test
+        fun testReal() {
+            val actual = Solution.solve(load_prod(), 3, 10)
+            println("Result: $actual")
+            assertEquals(936, actual)
+        }
+
+    }
+
     object Solution {
         var minPath = 0
-        fun solve(txt: String): Any {
-            minPath = Int.MAX_VALUE
+        var minLimit = 0
+        var maxLimit = 0
+        fun solve(txt: String, minLimit: Int = 0, maxLimit: Int = 3): Any {
+            this.minLimit = minLimit
+            this.maxLimit = maxLimit
             val city = txt.lines().map { it.map { it.digitToInt() } }
+            minPath = findBadPath(city, minLimit, maxLimit)
             val cache = Array(4) { Array(city.size) { IntArray(city.first().size) { Int.MAX_VALUE } } }
             start(Direction.East, city, cache)
             start(Direction.North, city, cache)
             return minPath
+        }
+
+        private fun findBadPath(city: List<List<Int>>, minLimit: Int, maxLimit: Int): Int {
+            val width = city.size
+            val height = city.first().size
+            var dx = width-1
+            var dy = height-1
+            var pos = Coords(0, 0)
+            var cost = 0
+            fun move(dir: Direction, delta: Int): Int {
+                val nextStep = if (delta < maxLimit) delta else min(maxLimit, delta - minLimit)
+                var moved = 0
+                for (fwd in 0..<nextStep) {
+                    cost += city[pos.y][pos.x]
+                    pos = pos.move(dir)
+                    moved++
+                }
+                return moved
+            }
+            while (dx > 0 || dy > 0) {
+                while (dx >= dy) {
+                    dx -= move(Direction.East, dx)
+                }
+                while (dy > dx) {
+                    dy -= move(Direction.North, dy)
+                }
+            }
+            return cost
         }
 
         private fun start(
@@ -59,20 +110,22 @@ class Day17 {
             if (currentCost >= cacheCost) return
             cache[dir.ordinal][y][x] = currentCost
             var midBLock = coords
-            for (fwd in 0..2) {
+            for (fwd in 0..<maxLimit) {
                 currentCost += city[midBLock.y][midBLock.x]
                 if (currentCost >= minPath) return
-                if (midBLock.y == city.lastIndex && midBLock.x == city.first().lastIndex) {
-                    if (currentCost < minPath) {
-                        minPath = currentCost
+                if (fwd >= minLimit) {
+                    if (midBLock.y == city.lastIndex && midBLock.x == city.first().lastIndex) {
+                        if (currentCost < minPath) {
+                            minPath = currentCost
+                        }
                     }
-                }
 
-                dir.left().let { dir ->
-                    search(midBLock.move(dir), dir, currentCost, city, cache)
-                }
-                dir.right().let { dir ->
-                    search(midBLock.move(dir), dir, currentCost, city, cache)
+                    dir.left().let { dir ->
+                        search(midBLock.move(dir), dir, currentCost, city, cache)
+                    }
+                    dir.right().let { dir ->
+                        search(midBLock.move(dir), dir, currentCost, city, cache)
+                    }
                 }
                 midBLock = midBLock.move(dir)
                 if (!midBLock.withinBox(city.first().size, city.size)) {
@@ -80,6 +133,7 @@ class Day17 {
                 }
             }
         }
+
     }
 
     companion object {
