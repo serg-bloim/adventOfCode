@@ -1,9 +1,5 @@
 package advent23
 
-import advent23.Day10.Helper.move
-import advent23.Day10.Helper.withinBox
-import advent23.Day10.Helper.x
-import advent23.Day10.Helper.y
 import org.junit.jupiter.api.Test
 import kotlin.math.min
 

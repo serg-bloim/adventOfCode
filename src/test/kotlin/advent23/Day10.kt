@@ -1,10 +1,5 @@
 package advent23
 
-import advent23.Day10.Helper.move
-import advent23.Day10.Helper.plus
-import advent23.Day10.Helper.withinBox
-import advent23.Day10.Helper.x
-import advent23.Day10.Helper.y
 import advent23.Day10.Solution1.solve
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -195,32 +190,6 @@ class Day10 {
             return Resources().loadString("${res_prefix}_prod.txt")
         }
 
-
-    }
-
-    object Helper {
-        fun Coords.move(dir: Direction, n:Int = 1) = this + when (dir) {
-            Direction.North -> Coords(0, n)
-            Direction.South -> Coords(0, -n)
-            Direction.West -> Coords(-n, 0)
-            Direction.East -> Coords(n, 0)
-        }
-
-        operator fun Coords.plus(other: Coords) = Coords(x + other.x, y + other.y)
-
-        fun Coords.withinBox(width: Int, height: Int): Boolean {
-            return x >= 0 && x < width && y >= 0 && y < height
-        }
-
-        val Coords.x: Int
-            get() {
-                return first
-            }
-
-        val Coords.y: Int
-            get() {
-                return second
-            }
 
     }
 

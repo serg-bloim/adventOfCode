@@ -3,8 +3,6 @@ package advent23
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
-typealias Coords = Pair<Int, Int>
-
 internal class Challenge6 {
     @Test
     fun testSmall() {
@@ -32,7 +30,7 @@ internal class Challenge6 {
                     y
                 )                                      // Calc the boundary around the number
                     .filter { (x, y) -> x in line.indices && y in lines.indices }   // Make sure we are not processing coords out of the map.
-                    .filter { lines[it.second][it.first] == '*' }                   // Get those cells that have a gear in it
+                    .filter { lines[it.y][it.x] == '*' }                   // Get those cells that have a gear in it
                     .forEach { gearCoords -> gears.computeIfAbsent(gearCoords) { mutableListOf() }.add(num) }  // Add the number into a respective list for a particular gear
             }
         }
@@ -46,13 +44,13 @@ internal class Challenge6 {
     }
 
     private fun getNumberBoundary(xRange: IntRange, y: Int) = sequence {
-        yieldAll(xRange.map { x -> Pair(x, y - 1) })
-        yieldAll(xRange.map { x -> Pair(x, y + 1) })
+        yieldAll(xRange.map { x -> Coords(x, y - 1) })
+        yieldAll(xRange.map { x -> Coords(x, y + 1) })
         for (dy in -1..1) {
-            yield(Pair(xRange.first - 1, y + dy))
+            yield(Coords(xRange.first - 1, y + dy))
         }
         for (dy in -1..1) {
-            yield(Pair(xRange.last + 1, y + dy))
+            yield(Coords(xRange.last + 1, y + dy))
         }
     }
 

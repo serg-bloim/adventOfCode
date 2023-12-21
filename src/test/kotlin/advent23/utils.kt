@@ -248,9 +248,17 @@ enum class Direction {
     fun left() = next().reversed()
 }
 
-fun move(x: Int, y: Int, dir: Direction) = when (dir) {
-    Direction.North -> Pair(x, y - 1)
-    Direction.West -> Pair(x - 1, y)
-    Direction.South -> Pair(x, y + 1)
-    Direction.East -> Pair(x + 1, y)
+data class Coords(val x:Int, val y:Int)
+
+fun Coords.move(dir: Direction, n:Int = 1) = this + when (dir) {
+    Direction.North -> Coords(0, n)
+    Direction.South -> Coords(0, -n)
+    Direction.West -> Coords(-n, 0)
+    Direction.East -> Coords(n, 0)
+}
+
+operator fun Coords.plus(other: Coords) = Coords(x + other.x, y + other.y)
+
+fun Coords.withinBox(width: Int, height: Int): Boolean {
+    return x >= 0 && x < width && y >= 0 && y < height
 }
