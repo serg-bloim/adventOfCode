@@ -3,6 +3,7 @@ package advent23
 import org.junit.jupiter.api.Test
 import java.io.PrintStream
 import kotlin.math.max
+import kotlin.math.min
 import kotlin.test.assertEquals
 
 
@@ -248,9 +249,9 @@ enum class Direction {
     fun left() = next().reversed()
 }
 
-data class Coords(val x:Int, val y:Int)
+data class Coords(val x: Int, val y: Int)
 
-fun Coords.move(dir: Direction, n:Int = 1) = this + when (dir) {
+fun Coords.move(dir: Direction, n: Int = 1) = this + when (dir) {
     Direction.North -> Coords(0, n)
     Direction.South -> Coords(0, -n)
     Direction.West -> Coords(-n, 0)
@@ -262,3 +263,18 @@ operator fun Coords.plus(other: Coords) = Coords(x + other.x, y + other.y)
 fun Coords.withinBox(width: Int, height: Int): Boolean {
     return x >= 0 && x < width && y >= 0 && y < height
 }
+
+
+data class LongCoords(val x: Long, val y: Long)
+
+fun LongCoords.move(dir: Direction, n: Long = 1) = when (dir) {
+    Direction.North -> copy(y = y + n)
+    Direction.West -> copy(x = x - n)
+    Direction.South -> copy(y = y - n)
+    Direction.East -> copy(x = x + n)
+}
+
+fun LongRange.size(): Long = last - start + 1
+
+fun <T> Sequence<T>.append(elem: T) = this + sequenceOf(elem)
+fun min(a: Long, b: Long, c: Long) = min(a, min(b, c))
