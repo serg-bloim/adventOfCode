@@ -199,11 +199,11 @@ class Day10 {
     }
 
     object Helper {
-        fun Coords.move(dir: Direction) = this + when (dir) {
-            Direction.North -> Coords(0, 1)
-            Direction.South -> Coords(0, -1)
-            Direction.West -> Coords(-1, 0)
-            Direction.East -> Coords(1, 0)
+        fun Coords.move(dir: Direction, n:Int = 1) = this + when (dir) {
+            Direction.North -> Coords(0, n)
+            Direction.South -> Coords(0, -n)
+            Direction.West -> Coords(-n, 0)
+            Direction.East -> Coords(n, 0)
         }
 
         operator fun Coords.plus(other: Coords) = Coords(x + other.x, y + other.y)
