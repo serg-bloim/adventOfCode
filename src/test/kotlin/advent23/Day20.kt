@@ -1,8 +1,6 @@
 package advent23
 
 import org.junit.jupiter.api.Test
-import java.util.Queue
-import kotlin.test.assertContains
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -33,9 +31,36 @@ class Day20 {
 
     }
 
+    internal class Task2 {
+        @Test
+        fun testReal() {
+            val actual = Solution.solve2(load_prod())
+            println("Result: $actual")
+            assertEquals(12345, actual)
+        }
+
+    }
+
     object Solution {
         fun solve(txt: String): Any {
+            val rx = BlackHole("rx")
+            val modules = parseModules(txt, rx)
+            val bcst = modules.first { it is Broadcast }
+            val btn = Button(bcst)
+            val processing = ArrayDeque<Module>()
+            val rt = Runtime()
+            repeat(1000) {
+                processing.addLast(btn)
+                while (processing.isNotEmpty()) {
+                    val next = processing.removeFirst()
+                    val dsts = next.process(rt)
+                    processing.addAll(dsts)
+                }
+            }
+            return rt.lo.toLong() * rt.hi
+        }
 
+        private fun parseModules(txt: String, rx: BlackHole): List<Module> {
             val modules = txt.lineSequence()
                 .map { it.trim() }
                 .filter { it.isNotEmpty() }
@@ -52,7 +77,7 @@ class Day20 {
                     val lookup = modules.associateBy { it.name }
                     for (d in descrs) {
                         val src = lookup[d.name]!!
-                        src.dsts = d.dsts.map { lookup[it] ?: BlackHole(it) }
+                        src.dsts = d.dsts.map { lookup[it] ?: rx }
                         for (dst in src.dsts) {
                             // Init Conjunctions
                             if (dst is Conjunction)
@@ -61,25 +86,33 @@ class Day20 {
                     }
                     modules
                 }
-            val bcst = modules.first { it is Broadcast }
-            val btn = Button(bcst)
-            val processing = ArrayDeque<Module>()
-            val rt = Runtime()
-            repeat(1000) {
-                processing.addLast(btn)
-                while (processing.isNotEmpty()) {
-                    val next = processing.removeFirst()
-                    val dsts = next.process(rt)
-                    processing.addAll(dsts)
-                }
-            }
-            return rt.lo.toLong() * rt.hi
+            return modules
         }
 
         val moduleRe = Regex("""(%|&)?(\w+) -> ([\w, ]+)""")
         private fun parseModuleDescr(str: String): ModuleDescr {
             val (type, name, dsts) = moduleRe.matchEntire(str)!!.destructured
             return ModuleDescr(name, type, dsts.split(", "))
+        }
+
+        fun solve2(txt: String): Any {
+            val rx = BlackHole("rx")
+            val modules = parseModules(txt, rx)
+            val bcst = modules.first { it is Broadcast }
+            val btn = Button(bcst)
+            val processing = ArrayDeque<Module>()
+            val rt = Runtime()
+            var i = 0L
+            while (true) {
+                processing.addLast(btn)
+                i++
+                while (processing.isNotEmpty()) {
+                    val next = processing.removeFirst()
+                    val dsts = next.process(rt)
+                    if (rx.received > 0 && rx.pulseLo == true) return i
+                    processing.addAll(dsts)
+                }
+            }
         }
     }
 
@@ -147,7 +180,14 @@ class Day20 {
     }
 
     class BlackHole(name: String) : Module("$name") {
-        override fun receive(pulse: Boolean, from: Module) {}
+        var received = 0
+        var pulseHi = false
+        var pulseLo = false
+
+        override fun receive(pulse: Boolean, from: Module) {
+            if (pulse) pulseHi = true else pulseLo = true
+            received++
+        }
 
         override fun process(rt: Runtime) = emptyList<Module>()
     }
