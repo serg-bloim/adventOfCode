@@ -131,7 +131,10 @@ fun Int.pow(v: Int) = generateSequence(1) { it * this }.drop(v).first()
 fun Long.pow(v: Int) = generateSequence(1L) { it * this }.drop(v).first()
 
 fun LongRange.intersectRange(other: LongRange): LongRange {
-    return LongRange(kotlin.math.max(start, other.start), kotlin.math.min(endInclusive, other.endInclusive))
+    return LongRange(max(first, other.first), min(last, other.last))
+}
+fun IntRange.intersectRange(other: IntRange): IntRange {
+    return IntRange(max(first, other.first), min(last, other.last))
 }
 
 class MemorizingIterator<T>(val iterator: Iterator<T>) : Iterator<T> {
@@ -286,3 +289,5 @@ fun Coords.neighbors(xMax: Int = Int.MAX_VALUE - 1, yMax: Int = Int.MAX_VALUE - 
     Direction.entries.asSequence()
         .map { move(it) }
         .filter { it.withinBox(xMax + 1, yMax + 1) }
+
+operator fun <E> List<E>.component6() = this[5]
