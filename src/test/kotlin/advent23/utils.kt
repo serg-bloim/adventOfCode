@@ -280,3 +280,9 @@ fun IntRange.size(): Int = last - start + 1
 
 fun <T> Sequence<T>.append(elem: T) = this + sequenceOf(elem)
 fun min(a: Long, b: Long, c: Long) = min(a, min(b, c))
+
+
+fun Coords.neighbors(xMax: Int = Int.MAX_VALUE - 1, yMax: Int = Int.MAX_VALUE - 1) =
+    Direction.entries.asSequence()
+        .map { move(it) }
+        .filter { it.withinBox(xMax + 1, yMax + 1) }
