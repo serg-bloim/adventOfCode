@@ -220,7 +220,7 @@ fun <E> List<E>.permutations2(): Sequence<Pair<E, E>> = sequence {
 fun assertEquals(expected: Any?, actual: Any?, message: String? = null) {
     val expected = if (expected is Int) expected.toLong() else expected
     val actual = if (actual is Int) actual.toLong() else actual
-    kotlin.test.assertEquals(expected, actual, message)
+    assertEquals(expected, actual, message)
 }
 
 fun <T> List<T>.skipStart(n: Int) = subList(n, size)

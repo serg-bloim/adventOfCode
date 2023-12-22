@@ -42,8 +42,8 @@ class Day {
     }
     companion object {
         val res_prefix = this::class.java.enclosingClass.simpleName.lowercase()
-        fun load_test(): String {
-            return Resources().loadString("${res_prefix}_test.txt")
+        fun load_test(prefix:Any=""): String {
+            return Resources().loadString("${res_prefix}_test$prefix.txt")
         }
 
         fun load_prod(): String {
