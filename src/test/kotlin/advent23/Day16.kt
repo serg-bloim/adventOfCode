@@ -35,16 +35,8 @@ class Day16 {
         fun testReal() {
             val actual = Solution.countEnergizedMax(load_prod())
             println("Result: $actual")
-            assertEquals(12345, actual)
+            assertEquals(7635, actual)
         }
-
-        @Test
-        fun testRealSingle() {
-            val actual = Solution.countEnergized(load_prod(), 0, 10, Direction.East)
-            println("Result: $actual")
-            assertEquals(12345, actual)
-        }
-
     }
 
     object Solution {
@@ -56,29 +48,39 @@ class Day16 {
         }
 
         fun visitRecursively(x: Int, y: Int, dir: Direction, field: List<List<Enum<*>?>>, visitedMap: Array<IntArray>) {
-//            println("Visited [$x $y]")
-            if (y !in field.indices || x !in field.first().indices) return
-            val orientation = if (dir == Direction.North || dir == Direction.South) 1 else 2
-            val visited = visitedMap[y][x]
-            visitedMap[y][x] = visited.or(orientation)
-            when (val currentStructure = field[y][x]) {
-                null -> {
-                    if (visited == orientation) return
-                    val (x, y) = nextCell(x, y, dir)
-                    visitRecursively(x, y, dir, field, visitedMap)
-                }
+            var x = x
+            var y = y
+            var dir = dir
+            while (true) {
+                if (y !in field.indices || x !in field.first().indices) return
+                val orientation = if (dir == Direction.North || dir == Direction.South) 1 else 2
+                val visited = visitedMap[y][x]
+                visitedMap[y][x] = visited.or(orientation)
+                when (val currentStructure = field[y][x]) {
+                    null -> {
+                        if (visited == orientation) return
+                        val nextCell = nextCell(x, y, dir)
+                        x = nextCell.first
+                        y = nextCell.second
+                        continue
+                    }
 
-                is Mirror -> {
-                    val nextDir = currentStructure.change(dir)
-                    val (x, y) = nextCell(x, y, nextDir)
-                    visitRecursively(x, y, nextDir, field, visitedMap)
-                }
+                    is Mirror -> {
+                        val nextDir = currentStructure.change(dir)
+                        val nextCell = nextCell(x, y, nextDir)
+                        x = nextCell.first
+                        y = nextCell.second
+                        dir = nextDir
+                        continue
+                    }
 
-                is Splitter -> {
-                    if (visited == orientation) return
-                    for (dir in currentStructure.change(dir)) {
-                        val (x, y) = nextCell(x, y, dir)
-                        visitRecursively(x, y, dir, field, visitedMap)
+                    is Splitter -> {
+                        if (visited == orientation) return
+                        for (dir in currentStructure.change(dir)) {
+                            val (x, y) = nextCell(x, y, dir)
+                            visitRecursively(x, y, dir, field, visitedMap)
+                        }
+                        return
                     }
                 }
             }
@@ -105,21 +107,16 @@ class Day16 {
 
             val starts =
                 field.indices.asSequence().map { y ->
-                Triple(0, y, Direction.East)
-            }.toList()
-//                    field.indices.asSequence().map { y ->
-//                Triple(field.first().indices.last, y, Direction.West)
-//            }
-
-
-//            + field.first().indices.asSequence().map { x ->
-//                Triple(x, 0, Direction.South)
-//            } + field.first().indices.asSequence().map { x ->
-//                Triple(x, field.indices.last, Direction.North)
-//            }
+                    Triple(0, y, Direction.East)
+                } + field.indices.asSequence().map { y ->
+                    Triple(field.first().indices.last, y, Direction.West)
+                } + field.first().indices.asSequence().map { x ->
+                    Triple(x, 0, Direction.South)
+                } + field.first().indices.asSequence().map { x ->
+                    Triple(x, field.indices.last, Direction.North)
+                }
             var maxCount = 0
-            for ((x, y, dir) in starts){
-                println("Start $x $y $dir")
+            for ((x, y, dir) in starts) {
                 erase(visited)
                 visitRecursively(x, y, dir, field, visited)
                 val res = visited.asSequence().flatMap { it.asSequence() }.count { it != 0 }
