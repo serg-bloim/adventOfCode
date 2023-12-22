@@ -276,5 +276,7 @@ fun LongCoords.move(dir: Direction, n: Long = 1) = when (dir) {
 
 fun LongRange.size(): Long = last - start + 1
 
+fun IntRange.size(): Int = last - start + 1
+
 fun <T> Sequence<T>.append(elem: T) = this + sequenceOf(elem)
 fun min(a: Long, b: Long, c: Long) = min(a, min(b, c))

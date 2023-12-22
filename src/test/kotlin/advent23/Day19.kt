@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
+
 class Day19 {
     internal class Task1 {
         @Test
@@ -23,11 +24,29 @@ class Day19 {
 
     }
 
+    internal class Task2 {
+        @Test
+        fun testSmall() {
+            val actual = Solution.solve2(load_test())
+            println("Result: $actual")
+            result.println("Result: $actual")
+            assertEquals(167409079868000, actual)
+        }
+
+        @Test
+        fun testReal() {
+            val actual = Solution.solve2(load_prod())
+            println("Result: $actual")
+            assertEquals(121964982771486, actual)
+        }
+
+    }
+
     object Solution {
         val partRe = Regex("""\{x=(\d+),m=(\d+),a=(\d+),s=(\d+)\}""")
         val workflowRe = Regex("""(\w+)\{(.+),(\w+)\}""")
         val ruleRe = Regex("""(\w)(<|>)(\d+):(\w+)""")
-        fun solve(txt: String): Any {
+        fun parseInput(txt: String): Pair<Map<String, Workflow>, List<Part>> {
             val (wfs, parts) = txt.lineSequence()
                 .map { it.trim() }
                 .filter { it.isNotEmpty() }
@@ -42,6 +61,11 @@ class Day19 {
                     )
                 }
             val wfLookup = wfs.associateBy { it.name }
+            return Pair(wfLookup, parts)
+        }
+
+        fun solve(txt: String): Any {
+            val (wfLookup, parts) = parseInput(txt)
             fun process(p: Part): Boolean {
                 var dst = "in"
                 val terminalDst = listOf("A", "R")
@@ -53,7 +77,7 @@ class Day19 {
             }
             return parts.asSequence()
                 .filter { process(it) }
-                .onEach { println("Part $it accepted") }
+//                .onEach { println("Part $it accepted") }
                 .sumOf { it.x + it.m + it.a + it.s }
         }
 
@@ -67,9 +91,39 @@ class Day19 {
             }
             return Workflow(name, rules, def)
         }
+
+        fun solve2(txt: String): Long {
+            val (wfLookup, parts) = parseInput(txt)
+            val init = IntRange(1, 4000).let { PartRange(it, it, it, it) }
+
+            fun process(dst: String, partRange: PartRange): Sequence<PartRange> = sequence {
+                if (partRange.isEmpty()) return@sequence
+                when (dst) {
+                    "A" -> yield(partRange)
+                    "R" -> {}
+                    else -> {
+                        var partRange = partRange
+                        val wf = wfLookup[dst]!!
+                        for (rule in wf.rules) {
+                            val (a, b) = rule.slice(partRange)
+                            yieldAll(process(rule.dst, a))
+                            partRange = b
+                        }
+                        yieldAll(process(wf.def, partRange))
+                    }
+                }
+            }
+            return process("in", init).sumOf { it.permutations() }
+        }
     }
 
     data class Part(val x: Int, val m: Int, val a: Int, val s: Int)
+    data class PartRange(val x: IntRange, val m: IntRange, val a: IntRange, val s: IntRange) {
+        fun isEmpty() = x.isEmpty() || m.isEmpty() || a.isEmpty() || s.isEmpty()
+
+        fun permutations() = x.size().toLong() * m.size() * a.size() * s.size()
+    }
+
     data class Rule(val param: String, val op: String, val n: Int, val dst: String) {
         val paramExtr = when (param) {
             "x" -> Part::x
@@ -78,10 +132,33 @@ class Day19 {
             "s" -> Part::s
             else -> throw IllegalArgumentException()
         }
+        val rangeParamExtr = when (param) {
+            "x" -> PartRange::x
+            "m" -> PartRange::m
+            "a" -> PartRange::a
+            "s" -> PartRange::s
+            else -> throw IllegalArgumentException()
+        }
         val compRes = if (op == "<") -1 else 1
         fun accepts(p: Part): Boolean {
             val partN = paramExtr(p)
             return partN.compareTo(n) == compRes
+        }
+
+        fun slice(partRange: PartRange): Pair<PartRange, PartRange> {
+            val range = rangeParamExtr(partRange)
+            val (fits, rest) = if (op == "<") {
+                Pair(IntRange(range.first, n - 1), IntRange(n, range.last))
+            } else {
+                Pair(IntRange(n + 1, range.last), IntRange(range.first, n))
+            }
+            return when (param) {
+                "x" -> Pair(partRange.copy(x = fits), partRange.copy(x = rest))
+                "m" -> Pair(partRange.copy(m = fits), partRange.copy(m = rest))
+                "a" -> Pair(partRange.copy(a = fits), partRange.copy(a = rest))
+                "s" -> Pair(partRange.copy(s = fits), partRange.copy(s = rest))
+                else -> throw IllegalArgumentException()
+            }
         }
     }
 
