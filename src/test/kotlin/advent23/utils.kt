@@ -152,8 +152,8 @@ fun <T> Iterator<T>.memorizing(): MemorizingIterator<T> {
     return MemorizingIterator(this)
 }
 
-fun <T> Iterable<T>.repeatForever() = sequence {
-    while (true) {
+fun <T> Iterable<T>.repeatForever(n: Int = Int.MAX_VALUE) = sequence {
+    for (i in 1..n) {
         yieldAll(this@repeatForever)
     }
 }
@@ -291,3 +291,11 @@ fun Coords.neighbors(xMax: Int = Int.MAX_VALUE - 1, yMax: Int = Int.MAX_VALUE - 
         .filter { it.withinBox(xMax + 1, yMax + 1) }
 
 operator fun <E> List<E>.component6() = this[5]
+
+val <E> List<List<E>>.width: Int
+    get() = first().size
+val <E> List<List<E>>.height: Int
+    get() = size
+
+fun ceilingDiv(a: Int, b: Int) = (a + b - 1) / b
+
