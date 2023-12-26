@@ -1,13 +1,8 @@
 package advent23
 
-import advent23.Day21.Solution.colorMap
 import advent23.Day21.Solution.countEvensInRomb
 import advent23.Day21.Solution.countOddsInRomb
-import advent23.Day21.Solution.erase
-import advent23.Day21.Solution.parseMap
-import advent23.Day21.Solution.stretchMap
 import org.junit.jupiter.api.Test
-import kotlin.math.absoluteValue
 
 class Day21 {
     internal class Task1 {
@@ -40,110 +35,12 @@ class Day21 {
 
         @Test
         fun testSmall1() {
-            val actual = Solution.solve(load_test(), 10)
-            println("Result: $actual")
-            assertEquals(50, actual)
-        }
-
-        @Test
-        fun testSmall2() {
-            val actual = Solution.solve(load_test(), 50)
-            println("Result: $actual")
-            assertEquals(1594, actual)
-        }
-
-        @Test
-        fun testSmall3() {
-            val actual = Solution.solve(load_test(), 100)
-            println("Result: $actual")
-            assertEquals(6536, actual)
-        }
-
-        @Test
-        fun testSmall4() {
-            val actual = Solution.solve(load_test(), 1000)
-            println("Result: $actual")
-            assertEquals(668697, actual)
-        }
-
-        @Test
-        fun testRealSmallBruteforce() {
-            val n = 6
-            val steps = 131 * n + 65
-            val actual = Solution.solve(load_prod(), steps)
-            println("Result: $actual")
-            assertEquals(650771, actual)
-        }
-
-        @Test
-        fun testRealSmallPartialBruteforce() {
-            val n = 6
-            fun steps(n: Int) = 131 * n + 65
-            val (map, start) = parseMap(load_prod()).let { (map, start) ->
-                stretchMap(map, steps(n), start)
+            val tests = mapOf(10 to 50, 50 to 1594, 100 to 6536, 1000 to 668697)
+            for ((steps, expected) in tests) {
+                val actual = Solution.solve(load_test(), steps)
+                println("Result: $actual")
+                assertEquals(expected, actual)
             }
-
-            erase(map)
-            val steps = steps(n) - 0
-            colorMap(map, start, 0, steps)
-            val even = steps % 2
-            val actual = map.sumOf { it.count { it >= 0 && it < Int.MAX_VALUE && it % 2 == even } }
-
-            for (y in 0..2 * n) {
-                result.println()
-                result.println()
-                for (x in 0..2 * n) {
-                    val singleQuadrant = map.filterIndexed { yInd, _ -> yInd / 131 == y }
-                        .map { it.asSequence().filterIndexed { xInd, _ -> xInd / 131 == x } }
-                    if (x == 2 && y == 1)
-                        singleQuadrant.forEach {
-                            dbg.println(it.joinToString("") {
-                                when {
-                                    it >= 0 && it < Int.MAX_VALUE && it % 2 == even -> "O"
-                                    it < 0 -> "#"
-                                    else -> "."
-                                }
-                            })
-                        }
-                    val res = singleQuadrant.sumOf { it.count { it >= 0 && it < Int.MAX_VALUE && it % 2 == even } }
-//                    dbg.println("x=$x y=$y : $res")
-                    result.print(res.toString().padStart(6).padEnd(8))
-                    for (dx in 0..<131) {
-                        for (dy in 0..<131) {
-                            map[y * 131 + dy][x * 131 + dx] = -1
-                        }
-                    }
-                    val x0 = x - n
-                    val y0 = y - n
-                    if (x0.absoluteValue + y0.absoluteValue >= n) {
-                        val a = 1
-                        for (dx in 0..<131) {
-                            for (dy in 0..<131) {
-                                map[y * 131 + dy][x * 131 + dx] = -1
-                            }
-                        }
-                    }
-                }
-            }
-
-            val partial = map.sumOf { it.count { it >= 0 && it < Int.MAX_VALUE && it % 2 == even } }
-            println("Partial: $partial")
-            println("Result: $actual")
-            assertEquals(34786, actual)
-        }
-
-        /**
-         * Tries
-         * 629716275489015
-         * 629710049908714
-         */
-        @Test
-        fun testRealSmall() {
-            val n = 6
-            val steps = 131 * n + 65
-            val actual = Solution.solve2(load_prod(), steps)
-            println("Result: $actual")
-            assertEquals(650771, actual)
         }
 
         @Test
@@ -151,7 +48,7 @@ class Day21 {
             val steps = 26501365
             val actual = Solution.solve2(load_prod(), steps)
             println("Result: $actual")
-            assertEquals(466026, actual)
+            assertEquals(629720570456311, actual)
         }
 
     }
@@ -234,7 +131,8 @@ class Day21 {
             val maxFullMapInd = n - 1
             val black = countOddsInRomb(maxFullMapInd)
             val white = countEvensInRomb(maxFullMapInd)
-            val fullMaps = if (n % 2 == 0) black * wholeEven + white * wholeOdd else black * wholeOdd + white * wholeEven
+            val fullMaps =
+                if (n % 2 == 0) black * wholeEven + white * wholeOdd else black * wholeOdd + white * wholeEven
             val northCorner = calcSteps(map, start.move(Direction.South, 65), steps, steps - map.height + 1)
             val southCorner = calcSteps(map, start.move(Direction.North, 65), steps, steps - map.height + 1)
             val eastCorner = calcSteps(map, start.move(Direction.West, 65), steps, steps - map.height + 1)
@@ -249,7 +147,7 @@ class Day21 {
             val sw2 = calcSteps(map, start.move(Direction.North, 65).move(Direction.East, 65), steps, startStep2)
             val se1 = calcSteps(map, start.move(Direction.North, 65).move(Direction.West, 65), steps, startStep1)
             val se2 = calcSteps(map, start.move(Direction.North, 65).move(Direction.West, 65), steps, startStep2)
-            val incompleteTriangles1 = maxFullMapInd + 1 + 1 - 1
+            val incompleteTriangles1 = maxFullMapInd.toLong() + 1 + 1 - 1
             val incompleteTriangles2 = incompleteTriangles1 - 1
 
             return fullMaps +
