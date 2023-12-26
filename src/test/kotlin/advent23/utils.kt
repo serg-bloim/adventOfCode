@@ -211,11 +211,12 @@ fun leastCommonMultiple(a: Long, b: Long): Long {
     return lcm
 }
 
-fun <E> List<E>.permutations2(): Sequence<Pair<E, E>> = sequence {
+fun <E> List<E>.permutations2() = permutations2{a, b->Pair(a, b)}
+fun <E, R> List<E>.permutations2(transform:(E,E)->R): Sequence<R> = sequence {
     val list = this@permutations2
     for (i in list.indices) {
         for (j in i + 1..<list.size) {
-            yield(Pair(list[i], list[j]))
+            yield(transform(list[i], list[j]))
         }
     }
 }
