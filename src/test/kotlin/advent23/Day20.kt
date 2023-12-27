@@ -36,7 +36,7 @@ class Day20 {
         fun testReal() {
             val actual = Solution.solve2(load_prod())
             println("Result: $actual")
-            assertEquals(12345, actual)
+            assertEquals(217317393039529L, actual)
         }
 
     }
@@ -60,7 +60,7 @@ class Day20 {
             return rt.lo.toLong() * rt.hi
         }
 
-        private fun parseModules(txt: String, rx: BlackHole): List<Module> {
+        fun parseModules(txt: String, rx: BlackHole): List<Module> {
             val modules = txt.lineSequence()
                 .map { it.trim() }
                 .filter { it.isNotEmpty() }
@@ -98,6 +98,8 @@ class Day20 {
         fun solve2(txt: String): Any {
             val rx = BlackHole("rx")
             val modules = parseModules(txt, rx)
+            val monitor =
+                "gd,gr,vb,lg,pv,dl,nn,fk,fz,jt,lz,zc".split(',').map { m -> modules.first { it.name == m } as FlipFlop }
             val bcst = modules.first { it is Broadcast }
             val btn = Button(bcst)
             val processing = ArrayDeque<Module>()
@@ -106,6 +108,7 @@ class Day20 {
             while (true) {
                 processing.addLast(btn)
                 i++
+                rt.iter = i
                 while (processing.isNotEmpty()) {
                     val next = processing.removeFirst()
                     val dsts = next.process(rt)
@@ -119,6 +122,7 @@ class Day20 {
 
     data class ModuleDescr(val name: String, val type: String, val dsts: List<String>)
     class Runtime(var lo: Int = 0, var hi: Int = 0) {
+        var iter: Long = 0L
         fun register(pulse: Boolean, n: Int = 1) {
             if (pulse) hi += n
             else lo += n
@@ -134,6 +138,22 @@ class Day20 {
 
         open fun process(rt: Runtime): List<Module> {
             val result = calcOutPulse()
+            if (name == "vm" && result == false) {
+                assertEquals(0L, rt.iter % 3863)
+                dbg.println("$name = ${rt.iter}")
+            }
+            if (name == "kb" && result == false) {
+                assertEquals(0L, rt.iter % 3931)
+                dbg.println("$name = ${rt.iter}")
+            }
+            if (name == "dn" && result == false) {
+                assertEquals(0L, rt.iter % 3797)
+                dbg.println("$name = ${rt.iter}")
+            }
+            if (name == "vk" && result == false) {
+                assertEquals(0L, rt.iter % 3769)
+                dbg.println("$name = ${rt.iter}")
+            }
             val cnt = dsts.onEach { it.receive(result, this) }.count()
 //            println("Module $name sends pulse '${if (result) "HI" else "LO"}' $cnt times to [${dsts.joinToString(", ") { it.name }}]")
             rt.register(result, cnt)
@@ -141,6 +161,9 @@ class Day20 {
         }
 
         open fun calcOutPulse() = input.removeFirst().first
+        override fun toString(): String {
+            return "${this::class.simpleName}[$name]"
+        }
     }
 
     class Button(bcst: Module) : Module("button") {
@@ -253,6 +276,30 @@ class Day20 {
                 assertEquals(1, mod.process(rt).size)
                 assertEquals(expected, rcvr.calcOutPulse())
             }
+        }
+
+        @Test
+        fun visualizeGraph() {
+            val rx = BlackHole("rx")
+            val modules = Solution.parseModules(load_prod(), rx)
+            val bcst = modules.first { it is Broadcast }
+            val btn = Button(bcst)
+            fun mod2str(module: Module) = when (module) {
+                is Button -> "Btn"
+                is Broadcast -> "Cast"
+                is Conjunction -> "And(${module.name})"
+                is FlipFlop -> "Flip(${module.name})"
+                is BlackHole -> "Blackhole(${module.name})"
+                else -> throw IllegalArgumentException()
+            }
+
+            val str = modules.asSequence()
+                .append(btn)
+                .flatMap { src -> src.dsts.map { dst -> Pair(src, dst) } }
+                .map { (a, b) -> Pair(mod2str(a), mod2str(b)) }
+                .map { (src, dst) -> """"$src" -> "$dst"""" }
+                .joinToString(",")
+            dbg.println("modules={$str};")
         }
     }
 }
