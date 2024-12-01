@@ -34,6 +34,33 @@ class Day1 {
         }
     }
 
+    @Nested
+    inner class Task2 {
+        @Test
+        fun testSmall() {
+            val actual = solve(load_test())
+            println("Result: $actual")
+            result.println("Result: $actual")
+            assertEquals(31, actual)
+        }
+
+        @Test
+        fun testReal() {
+            val actual = solve(load_prod())
+            result.println("Result: $actual")
+            println("Result: $actual")
+            assertEquals(26800609, actual)
+        }
+
+        fun solve(txt: String): Int {
+            val (listA, listB) = parseInput(txt)
+            val countsB = listB.asSequence().groupingBy { it }.eachCount()
+            val similarity = listA.asSequence().sumOf { n -> n * (countsB[n] ?: 0) }
+            return similarity
+        }
+
+    }
+
     companion object {
         val res_prefix = this::class.java.enclosingClass.simpleName.lowercase()
         fun load_test(): String {
@@ -43,6 +70,7 @@ class Day1 {
         fun load_prod(): String {
             return Resources().loadString("${res_prefix}_prod.txt")
         }
+
         fun parseInput(txt: String): Pair<IntArray, IntArray> {
             val pairs = txt.lineSequence().map { line ->
                 line.split("""\s+""".toRegex()).map { it.toInt() }
