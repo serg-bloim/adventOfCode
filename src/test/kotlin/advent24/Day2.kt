@@ -4,6 +4,7 @@ import utils.*
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import kotlin.math.absoluteValue
+import kotlin.math.sign
 import kotlin.test.assertEquals
 
 class Day2 {
@@ -47,7 +48,7 @@ class Day2 {
             val actual = solve(load_test())
             println("Result: $actual")
             result.println("Result: $actual")
-            assertEquals(31, actual)
+            assertEquals(4, actual)
         }
 
         @Test
@@ -55,13 +56,45 @@ class Day2 {
             val actual = solve(load_prod())
             result.println("Result: $actual")
             println("Result: $actual")
-            assertEquals(26800609, actual)
+            assertEquals(604, actual)
         }
 
         fun solve(txt: String): Int {
-            return 42
+            val reports = parseInput(txt)
+            val safe = reports.count { rep ->
+                val unsafeIndex = findFirstUnsafeIndex(rep.asSequence())
+
+                if (unsafeIndex == -1) {
+                    true
+                } else {
+                    // If there is an unsafe index in the sequence,
+                    // then try it without the current of two next indexes
+                    val s1 = rep.asSequence().withoutIndex(unsafeIndex)
+                    val s2 = rep.asSequence().withoutIndex(unsafeIndex + 1)
+                    val s3 = rep.asSequence().withoutIndex(unsafeIndex + 2)
+                    findFirstUnsafeIndex(s1) == -1
+                            || findFirstUnsafeIndex(s2) == -1
+                            || findFirstUnsafeIndex(s3) == -1
+                }
+            }
+            return safe
         }
 
+        private fun findFirstUnsafeIndex(rep: Sequence<Int>): Int {
+            return rep.asSequence().zipWithNext { n1, n2 ->
+                // Two consecutive numbers, if they differ more than 3, return 0.
+                // Otherwise, return Sign(n1 - n2) meaning wither the pair is increasing or decreasing
+                if ((n1 - n2).absoluteValue > 3) {
+                    0
+                } else {
+                    (n1 - n2).sign
+                }
+            }.zipWithNext()
+                .indexOfFirst { (p1, p2) ->
+                    // Searching for the first pair that isn't safe
+                    p1 != p2 || p1 == 0
+                }
+        }
     }
 
     companion object {

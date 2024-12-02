@@ -133,6 +133,7 @@ fun Long.pow(v: Int) = generateSequence(1L) { it * this }.drop(v).first()
 fun LongRange.intersectRange(other: LongRange): LongRange {
     return LongRange(max(first, other.first), min(last, other.last))
 }
+
 fun IntRange.intersectRange(other: IntRange): IntRange {
     return IntRange(max(first, other.first), min(last, other.last))
 }
@@ -211,8 +212,8 @@ fun leastCommonMultiple(a: Long, b: Long): Long {
     return lcm
 }
 
-fun <E> List<E>.permutations2() = permutations2{a, b->Pair(a, b)}
-fun <E, R> List<E>.permutations2(transform:(E,E)->R): Sequence<R> = sequence {
+fun <E> List<E>.permutations2() = permutations2 { a, b -> Pair(a, b) }
+fun <E, R> List<E>.permutations2(transform: (E, E) -> R): Sequence<R> = sequence {
     val list = this@permutations2
     for (i in list.indices) {
         for (j in i + 1..<list.size) {
@@ -285,6 +286,7 @@ fun IntRange.size(): Int = last - start + 1
 fun <T> Sequence<T>.append(elem: T) = this + sequenceOf(elem)
 fun min(a: Long, b: Long, c: Long) = min(a, min(b, c))
 
+fun <T> Sequence<T>.withoutIndex(n: Int) = this.filterIndexed { index, _ -> index != n }
 
 fun Coords.neighbors(xMax: Int = Int.MAX_VALUE - 1, yMax: Int = Int.MAX_VALUE - 1) =
     Direction.entries.asSequence()
