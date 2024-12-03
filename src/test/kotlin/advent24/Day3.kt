@@ -20,15 +20,15 @@ class Day3 {
         fun testReal() {
             val actual = solve(load_prod())
             result.println("Result: $actual")
-            assertEquals(564, actual)
+            assertEquals(163931492, actual)
             println("Result: $actual")
         }
 
         fun solve(txt: String): Int {
-            val sum = """mul\((\d{1,3}),(\d{1,3})\)""".toRegex().findAll(txt)
+            val mulOperationRegex = """mul\((\d{1,3}),(\d{1,3})\)""".toRegex()
+            return mulOperationRegex.findAll(txt)
                 .map { it.groupValues[1].toInt() * it.groupValues[2].toInt() }
                 .sum()
-            return sum
         }
     }
 
@@ -47,14 +47,14 @@ class Day3 {
             val actual = solve(load_prod())
             result.println("Result: $actual")
             println("Result: $actual")
-            assertEquals(604, actual)
+            assertEquals(76911921, actual)
         }
 
         fun solve(txt: String): Int {
-            val ops = """mul\((\d{1,3}),(\d{1,3})\)|do\(\)|don't\(\)""".toRegex().findAll(txt)
+            val anyOpRegex = """mul\((\d{1,3}),(\d{1,3})\)|do\(\)|don't\(\)""".toRegex()
             var enabled = true
             var sum = 0
-            for (op in ops) {
+            for (op in anyOpRegex.findAll(txt)) {
                 when (op.value) {
                     "do()" -> enabled = true
                     "don't()" -> enabled = false
@@ -75,13 +75,6 @@ class Day3 {
 
         fun load_prod(): String {
             return Resources().loadString("${res_prefix}_prod.txt")
-        }
-
-        fun parseInput(txt: String): List<List<Int>> {
-            val data = txt.lineSequence().map { line ->
-                line.split("""\s+""".toRegex()).map { it.toInt() }
-            }.toList()
-            return data
         }
     }
 }
