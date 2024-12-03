@@ -80,19 +80,17 @@ class Day2 {
             return safe
         }
 
-        private fun findFirstUnsafeIndex(rep: Sequence<Int>): Int {
-            return rep.asSequence().zipWithNext { n1, n2 ->
-                // Two consecutive numbers, if they differ more than 3, return 0.
-                // Otherwise, return Sign(n1 - n2) meaning wither the pair is increasing or decreasing
-                if ((n1 - n2).absoluteValue > 3) {
-                    0
-                } else {
-                    (n1 - n2).sign
-                }
+        private fun findFirstUnsafeIndex(measurements: Sequence<Int>): Int {
+            return measurements.asSequence().zipWithNext { m1, m2 ->
+                // Compares two consecutive measurements
+                // If m2 > m1, then returns 1, else returns -1
+                // If the difference is 0 or > 3, then returns 0 meaning unsafe distance between m1 and m2
+                val diff = m2 - m1
+                diff.sign.takeIf { it.absoluteValue <= 3 } ?: 0
             }.zipWithNext()
-                .indexOfFirst { (p1, p2) ->
+                .indexOfFirst { (c1, c2) ->
                     // Searching for the first pair that isn't safe
-                    p1 != p2 || p1 == 0
+                    c1 != c2 || c1 == 0
                 }
         }
     }
