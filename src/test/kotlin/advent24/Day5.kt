@@ -84,15 +84,15 @@ class Day5 {
     }
 
     private fun fix(updates: List<Int>, orderingLookup: java.util.HashSet<Pair<Int, Int>>): List<Int> {
-        val pages = updates.toHashSet()
-        val orderings = orderingLookup.filter { it.first in pages && it.second in pages }.toHashSet()
+        val pages = updates.toMutableSet()
+        val orderings = orderingLookup.filter { it.first in pages && it.second in pages }.toMutableSet()
         val res = mutableListOf<Int>()
         while (orderings.size > 0){
-            val firstNumbers = orderings.map { it.first }.toSet()
-            val lastNumbers = orderings.map { it.second }.toSet()
-            val toInsert = firstNumbers - lastNumbers
-            res.addAll(toInsert)
-            orderings.removeIf { it.first in toInsert }
+            val firstPages = orderings.asSequence().map { it.first }.toSet()
+            val lastPages = orderings.asSequence().map { it.second }.toSet()
+            val pagesWithNoPredecessor = firstPages - lastPages
+            res.addAll(pagesWithNoPredecessor)
+            orderings.removeIf { it.first in pagesWithNoPredecessor }
         }
         pages.removeAll(res)
         res.addAll(pages)
