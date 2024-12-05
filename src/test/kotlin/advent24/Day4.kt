@@ -60,38 +60,27 @@ class Day4 {
         }
 
         fun solve(txt: String): Int {
-            val field = txt.lines().let {
-                val width = it[0].length
-                val height = it.size
-                val border = listOf(".".repeat(width + 2))
-                border + it.map { "." + it + "." } + border
-            }
+            val field = txt.lines()
             val width = field[0].length
             val height = field.size
             var cnt = 0
             for (x in 1 until width - 1) {
                 for (y in 1 until height - 1) {
-                    if (checkXMAS(field, x, y)) {
-                        cnt++
-                    }
+                    if (checkXMAS(field, x, y)) cnt++
                 }
             }
             return cnt
         }
 
         private fun checkXmasLine(c1: Char, c2: Char, c3: Char): Boolean {
-            return c2 == 'A' && ((c1 == 'M' && c3 == 'S') || (c1 == 'S' && c3 == 'M'))
+            val line = "" + c1 + c2 + c3
+            return line == "MAS" || line == "SAM"
         }
 
         private fun checkXMAS(field: List<String>, x: Int, y: Int): Boolean {
-            if (field[y][x] == 'A') {
-                if (checkXmasLine(field[y - 1][x - 1], field[y][x], field[y + 1][x + 1])
-                    && checkXmasLine(field[y - 1][x + 1], field[y][x], field[y + 1][x - 1])
-                ) {
-                    return true
-                }
-            }
-            return false
+            return (field[y][x] == 'A'
+                    && checkXmasLine(field[y - 1][x - 1], field[y][x], field[y + 1][x + 1])
+                    && checkXmasLine(field[y - 1][x + 1], field[y][x], field[y + 1][x - 1]))
         }
     }
 
