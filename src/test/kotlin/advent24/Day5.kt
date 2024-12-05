@@ -51,7 +51,16 @@ class Day5 {
             val actual = solve(load_test())
             println("Result: $actual")
             result.println("Result: $actual")
-            assertEquals(5555555, actual)
+            assertEquals(123, actual)
+        }
+        @Test
+        fun testUnique() {
+            val (ordering, updates) = parseInput(load_prod())
+            for(line in updates){
+                if (line.toSet().size != line.size){
+                    println("found")
+                }
+            }
         }
 
         @Test
@@ -59,12 +68,35 @@ class Day5 {
             val actual = solve(load_prod())
             result.println("Result: $actual")
             println("Result: $actual")
-            assertEquals(4185, actual)
+            assertEquals(4480, actual)
         }
 
         fun solve(txt: String): Int {
-            return 11111111
+            val (ordering, updates) = parseInput(txt)
+            val orderingLookup = ordering.toHashSet()
+            val res = updates.filterNot { isCorrect(it, orderingLookup) }
+                .map { fix(it, orderingLookup) }
+                .map { lst -> lst[lst.size / 2] }
+                .sum()
+            return res
+
         }
+    }
+
+    private fun fix(updates: List<Int>, orderingLookup: java.util.HashSet<Pair<Int, Int>>): List<Int> {
+        val pages = updates.toHashSet()
+        val orderings = orderingLookup.filter { it.first in pages && it.second in pages }.toHashSet()
+        val res = mutableListOf<Int>()
+        while (orderings.size > 0){
+            val firstNumbers = orderings.map { it.first }.toSet()
+            val lastNumbers = orderings.map { it.second }.toSet()
+            val toInsert = firstNumbers - lastNumbers
+            res.addAll(toInsert)
+            orderings.removeIf { it.first in toInsert }
+        }
+        pages.removeAll(res)
+        res.addAll(pages)
+        return res
     }
 
     companion object {
