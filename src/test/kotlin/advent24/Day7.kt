@@ -27,13 +27,14 @@ class Day7 {
 
         fun solve(txt: String): Any {
             val equations = parseInput(txt)
-            val sum = equations.filter { (res, nums) -> testEq(res, nums) }.sumOf { (res, nums) -> res }
+            val operatorScope = listOf(Operator.Plus, Operator.Times)
+            val sum = equations.filter { (res, nums) -> testEq(res, nums, operatorScope) }.sumOf { (res, nums) -> res }
             return sum
         }
     }
 
-    private fun testEq(res: Long, nums: List<Long>): Boolean {
-        for (ops in generateOperators(nums.size - 1)) {
+    private fun testEq(res: Long, nums: List<Long>, operatorScope: List<Operator>): Boolean {
+        for (ops in generateOperators(nums.size - 1, operatorScope)) {
             if (eval(nums, ops) == res) return true
         }
         return false
@@ -50,19 +51,15 @@ class Day7 {
         Combine(::comb);
     }
 
-    private fun generateOperators(n: Int): Sequence<Sequence<Operator>> {
+    private fun generateOperators(n: Int, operatorScope: List<Operator>): Sequence<Sequence<Operator>> {
         return sequence {
-            val max = 3.pow(n) - 1
+            val radix = operatorScope.size
+            val max = radix.pow(n) - 1
             val container = Array(n) { Operator.Plus }
             for (perm in 0..max) {
-                var perm2 = perm.toString(3).padStart(n, '0')
+                var perm2 = perm.toString(radix).padStart(n, '0')
                 for (i in 0 until n) {
-                    container[i] = when (perm2[i]) {
-                        '0' -> Operator.Plus
-                        '1' -> Operator.Times
-                        '2' -> Operator.Combine
-                        else -> throw Exception("error")
-                    }
+                    container[i] = operatorScope[perm2[i].digitToInt(radix)]
                 }
                 yield(container.asSequence())
             }
@@ -89,7 +86,8 @@ class Day7 {
 
         fun solve(txt: String): Long {
             val equations = parseInput(txt)
-            val sum = equations.filter { (res, nums) -> testEq(res, nums) }.sumOf { (res, nums) -> res }
+            val operatorScope = listOf(Operator.Plus, Operator.Times, Operator.Combine)
+            val sum = equations.filter { (res, nums) -> testEq(res, nums, operatorScope) }.sumOf { (res, _) -> res }
             return sum
 
         }
