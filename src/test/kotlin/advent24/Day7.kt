@@ -21,7 +21,7 @@ class Day7 {
         fun testReal() {
             val actual = solve(load_prod())
             result.println("Result: $actual")
-            assertEquals(555555555, actual)
+            assertEquals(1582598718861L, actual)
             println("Result: $actual")
         }
 
@@ -46,18 +46,23 @@ class Day7 {
 
     enum class Operator(val func: (Long, Long) -> Long) {
         Plus(Long::plus),
-        Times(Long::times)
+        Times(Long::times),
+        Combine(::comb);
     }
 
     private fun generateOperators(n: Int): Sequence<Sequence<Operator>> {
         return sequence {
-            val max = 2.pow(n) - 1
+            val max = 3.pow(n) - 1
             val container = Array(n) { Operator.Plus }
             for (perm in 0..max) {
-                var perm2 = perm
+                var perm2 = perm.toString(3).padStart(n, '0')
                 for (i in 0 until n) {
-                    container[i] = if (perm2.and(1) == 1) Operator.Plus else Operator.Times
-                    perm2 = perm2.shr(1)
+                    container[i] = when (perm2[i]) {
+                        '0' -> Operator.Plus
+                        '1' -> Operator.Times
+                        '2' -> Operator.Combine
+                        else -> throw Exception("error")
+                    }
                 }
                 yield(container.asSequence())
             }
@@ -71,7 +76,7 @@ class Day7 {
             val actual = solve(load_test())
             println("Result: $actual")
             result.println("Result: $actual")
-            assertEquals(5555555, actual)
+            assertEquals(11387L, actual)
         }
 
         @Test
@@ -79,11 +84,14 @@ class Day7 {
             val actual = solve(load_prod())
             result.println("Result: $actual")
             println("Result: $actual")
-            assertEquals(55555555, actual)
+            assertEquals(165278151522644L, actual)
         }
 
-        fun solve(txt: String): Int {
-            return 11111111
+        fun solve(txt: String): Long {
+            val equations = parseInput(txt)
+            val sum = equations.filter { (res, nums) -> testEq(res, nums) }.sumOf { (res, nums) -> res }
+            return sum
+
         }
     }
 
@@ -104,5 +112,7 @@ class Day7 {
             }.toList()
             return data
         }
+
+        fun comb(a: Long, b: Long) = (a.toString() + b.toString()).toLong()
     }
 }
