@@ -302,3 +302,21 @@ val <E> List<List<E>>.height: Int
 
 fun ceilingDiv(a: Int, b: Int) = (a + b - 1) / b
 
+class Field<T>(val data: List<MutableList<T>>) {
+    val width = data[0].size
+    val height = data.size
+    operator fun get(coords: Coords) = data[coords.y][coords.x]
+    operator fun set(coords: Coords, v: T) {
+        data[coords.y][coords.x] = v
+    }
+
+    fun forEachIndexed(op: (Coords, T) -> Unit) =
+        data.forEachIndexed { y, row -> row.forEachIndexed { x, v -> op(Coords(x, y), v) } }
+
+    fun forEach(op: (T) -> Unit) = forEachIndexed { _, v -> op(v) }
+
+    fun <V> mapIndexed(op: (Coords, T) -> V) =
+        Field(data.mapIndexed { y, row -> row.mapIndexed { x, v -> op(Coords(x, y), v) }.toMutableList() })
+
+    fun <V> map(op: (T) -> V) = mapIndexed { _, v -> op(v) }
+}
