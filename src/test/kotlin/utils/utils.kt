@@ -212,6 +212,21 @@ fun leastCommonMultiple(a: Long, b: Long): Long {
     return lcm
 }
 
+fun <T> List<T>.permutations(n: Int): Sequence<Sequence<T>> = sequence {
+    val radix = size
+    val max = radix.toLong().pow(n)
+    for (i in 0..<max) {
+        yield(sequence {
+            var rest = i
+            for (i in 0..<n) {
+                val index = rest % radix
+                yield(this@permutations[index.toInt()])
+                rest /= radix
+            }
+        })
+    }
+}
+
 fun <E> List<E>.permutations2() = permutations2 { a, b -> Pair(a, b) }
 fun <E, R> List<E>.permutations2(transform: (E, E) -> R): Sequence<R> = sequence {
     val list = this@permutations2

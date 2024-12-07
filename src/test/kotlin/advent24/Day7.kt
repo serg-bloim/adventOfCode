@@ -2,6 +2,7 @@ package advent24
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import utils.permutations
 import utils.pow
 import utils.result
 import kotlin.test.assertEquals
@@ -82,6 +83,16 @@ class Day7 {
             result.println("Result: $actual")
             println("Result: $actual")
             assertEquals(165278151522644L, actual)
+        }
+
+        @Test
+        fun testPermutations() {
+            val scope = listOf(0, 1, 2)
+            for (p in scope.permutations(3)) {
+                val msg = p.map { it.digitToChar() }.joinToString("")
+                result.println(msg)
+                println(msg)
+            }
         }
 
         fun solve(txt: String): Long {
