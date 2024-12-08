@@ -3,7 +3,6 @@ package advent24
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import utils.permutations
-import utils.pow
 import utils.result
 import kotlin.test.assertEquals
 
@@ -35,7 +34,7 @@ class Day7 {
     }
 
     private fun testEq(res: Long, nums: List<Long>, operatorScope: List<Operator>): Boolean {
-        for (ops in generateOperators(nums.size - 1, operatorScope)) {
+        for (ops in operatorScope.permutations(nums.size - 1)) {
             if (eval(nums, ops) == res) return true
         }
         return false
@@ -50,21 +49,6 @@ class Day7 {
         Plus(Long::plus),
         Times(Long::times),
         Combine(::comb);
-    }
-
-    private fun generateOperators(n: Int, operatorScope: List<Operator>): Sequence<Sequence<Operator>> {
-        return sequence {
-            val radix = operatorScope.size
-            val max = radix.pow(n) - 1
-            val container = Array(n) { Operator.Plus }
-            for (perm in 0..max) {
-                var perm2 = perm.toString(radix).padStart(n, '0')
-                for (i in 0 until n) {
-                    container[i] = operatorScope[perm2[i].digitToInt(radix)]
-                }
-                yield(container.asSequence())
-            }
-        }
     }
 
     @Nested
