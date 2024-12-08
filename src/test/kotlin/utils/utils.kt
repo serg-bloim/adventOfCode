@@ -185,6 +185,15 @@ fun <K, V : Any> Map<K, V>.merge(other: Map<K, V>, mergeOp: (V, V) -> V): Map<K,
     }
 }
 
+fun <K, V : Any> Map<K, V>.intersect(other: Map<K, V>, mergeOp: (V, V) -> V): Map<K, V> {
+    return buildMap {
+        val first = this@intersect
+        for ((k, v) in other) {
+            first[k]?.also { put(k, mergeOp(it, v)) }
+        }
+    }
+}
+
 fun primeFactors(num: Long): Map<Long, Int> {
     Primes.factorCache[num]?.let { return it }
     return Primes.getUntil(num).asSequence()
@@ -210,6 +219,25 @@ fun leastCommonMultiple(a: Long, b: Long): Long {
     val lcm = defactorize(res)
     Primes.factorCache[lcm] = res
     return lcm
+}
+
+fun greatestCommonDivisor(a: Long, b: Long): Long {
+    val factorsA = primeFactors(a)
+    var rest = b
+    var gcd = 1L
+    val factors = buildMap {
+        for ((f, cnt) in factorsA) {
+            for (i in 0..<cnt) {
+                if (rest % f == 0L) {
+                    this.compute(f) { k, v -> (v ?: 0) + 1 }
+                    gcd *= f
+                    rest /= f
+                }
+            }
+        }
+    }
+    Primes.factorCache[gcd] = factors
+    return gcd
 }
 
 fun <T> List<T>.permutations(n: Int): Sequence<Sequence<T>> = sequence {
