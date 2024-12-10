@@ -2,7 +2,10 @@ package advent24
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import utils.dbg
+import utils.repeatAsSequence
 import utils.result
+import java.util.LinkedList
 import kotlin.test.assertEquals
 
 class Day9 {
@@ -63,6 +66,14 @@ class Day9 {
         }
     }
 
+    data class FileDescriptor(
+        val id: Int,
+        val fileSize: Int,
+        var freeSpace: Int,
+        var moved: Boolean = false,
+        val additionalFileRefs: LinkedList<FileDescriptor> = LinkedList()
+    )
+
     @Nested
     inner class Task2 {
         @Test
@@ -70,7 +81,7 @@ class Day9 {
             val actual = solve(load_test())
             println("Result: $actual")
             result.println("Result: $actual")
-            assertEquals(5555555, actual)
+            assertEquals(2858L, actual)
         }
 
         @Test
@@ -81,8 +92,40 @@ class Day9 {
             assertEquals(55555555, actual)
         }
 
-        fun solve(txt: String): Int {
-            return 11111111
+        fun solve(txt: String): Any {
+            val format1 = parseInput(txt)
+            val files = format1.chunked(2)
+                .mapIndexed { index, pair -> FileDescriptor(index, pair.first(), pair.getOrNull(1) ?: 0) }
+                .toList()
+            for (fd in files.asReversed()) {
+                for (insertAfter in files) {
+                    if (insertAfter.id >= fd.id) break
+                    if (insertAfter.freeSpace >= fd.fileSize) {
+                        insertAfter.additionalFileRefs.add(fd)
+                        insertAfter.freeSpace -= fd.fileSize
+                        fd.moved = true
+                        break
+                    }
+                }
+            }
+
+            val blocks = files.asSequence().flatMap {
+                sequence {
+                    val id = if (it.moved) 0 else it.id
+                    yieldAll(id.repeatAsSequence(it.fileSize))
+                    for (af in it.additionalFileRefs) {
+                        yieldAll(af.id.repeatAsSequence(af.fileSize))
+                    }
+                    yieldAll(0.repeatAsSequence(it.freeSpace))
+                }
+            }
+            return blocks.mapIndexed { i, id -> (i * id).toLong() }.sum()
+        }
+    }
+
+    private fun buildReverseFileLookup(files: List<Triple<Int, Int, Int>>) = buildMap<Int, MutableList<Int>> {
+        for ((id, fileSize, _) in files.asReversed()) {
+            computeIfAbsent(fileSize) { mutableListOf() }.add(id)
         }
     }
 

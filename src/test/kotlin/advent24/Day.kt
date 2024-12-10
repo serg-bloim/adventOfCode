@@ -62,7 +62,7 @@ class Day {
             assertEquals(55555555, actual)
         }
 
-        fun solve(txt: String): Int {
+        fun solve(txt: String): Any {
             return 11111111
         }
     }

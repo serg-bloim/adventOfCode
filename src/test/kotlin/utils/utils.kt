@@ -363,3 +363,4 @@ class Field<T>(val data: List<MutableList<T>>) {
 
     fun <V> map(op: (T) -> V) = mapIndexed { _, v -> op(v) }
 }
+fun<T> T.repeatAsSequence(n:Int) = generateSequence { this }.take(n)
