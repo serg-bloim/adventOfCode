@@ -42,20 +42,21 @@ class Day10 {
 
     private fun countTrails(field: Field<Int>, coords: Coords): Int {
         val tops = mutableSetOf<Coords>()
-        registerTops(field, coords, tops)
-        return tops.size
+        return registerTops(field, coords, tops)
     }
 
-    private fun registerTops(field: Field<Int>, coords: Coords, tops: MutableSet<Coords>) {
+    private fun registerTops(field: Field<Int>, coords: Coords, tops: MutableSet<Coords>): Int {
         val height = field[coords]
         if (height == 9) {
             tops.add(coords)
-            return
+            return 1
         }
         val nextNeighbors = coords.neighbors(field.width - 1, field.height - 1).filter { field[it] == height + 1 }
+        var paths = 0
         for (next in nextNeighbors) {
-            registerTops(field, next, tops)
+            paths += registerTops(field, next, tops)
         }
+        return paths
     }
 
     @Nested
@@ -65,7 +66,7 @@ class Day10 {
             val actual = solve(load_test())
             println("Result: $actual")
             result.println("Result: $actual")
-            assertEquals(5555555, actual)
+            assertEquals(81, actual)
         }
 
         @Test
@@ -77,7 +78,15 @@ class Day10 {
         }
 
         fun solve(txt: String): Any {
-            return 11111111
+            val field = parseInput(txt)
+            var res = 0
+            field.forEachIndexed { coords, height ->
+                if (height == 0) {
+                    res += countTrails(field, coords)
+                }
+            }
+            return res
+
         }
     }
 
