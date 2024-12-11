@@ -255,7 +255,7 @@ fun <T> List<T>.permutations(n: Int): Sequence<Sequence<T>> = sequence {
     }
 }
 
-fun <E> List<E>.permutations2() = permutations2 { a, b -> Pair(a, b) }
+fun <E> List<E>.permutations2() = this.permutations2 { a, b -> Pair(a, b) }
 fun <E, R> List<E>.permutations2(transform: (E, E) -> R): Sequence<R> = sequence {
     val list = this@permutations2
     for (i in list.indices) {
@@ -338,20 +338,21 @@ fun Coords.neighbors(xMax: Int = Int.MAX_VALUE - 1, yMax: Int = Int.MAX_VALUE - 
 
 operator fun <E> List<E>.component6() = this[5]
 
-val <E> List<List<E>>.width: Int
-    get() = first().size
-val <E> List<List<E>>.height: Int
-    get() = size
-
 fun ceilingDiv(a: Int, b: Int) = (a + b - 1) / b
 
 class Field<T>(val data: List<MutableList<T>>) {
     val width = data[0].size
     val height = data.size
+    operator fun contains(coords: Coords) = coords.withinBox(width, height)
     operator fun get(coords: Coords) = data[coords.y][coords.x]
     operator fun set(coords: Coords, v: T) {
         data[coords.y][coords.x] = v
     }
+
+    fun getOrElse(coords: Coords, otherwise: T) =
+        if (coords in this) this[coords] else otherwise
+
+    fun getOrNull(coords: Coords) = if (coords in this) this[coords] else null
 
     fun forEachIndexed(op: (Coords, T) -> Unit) =
         data.forEachIndexed { y, row -> row.forEachIndexed { x, v -> op(Coords(x, y), v) } }
@@ -363,4 +364,5 @@ class Field<T>(val data: List<MutableList<T>>) {
 
     fun <V> map(op: (T) -> V) = mapIndexed { _, v -> op(v) }
 }
-fun<T> T.repeatAsSequence(n:Int) = generateSequence { this }.take(n)
+
+fun <T> T.repeatAsSequence(n: Int) = generateSequence { this }.take(n)
