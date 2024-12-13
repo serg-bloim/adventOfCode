@@ -385,12 +385,12 @@ class Field<T>(val data: List<MutableList<T>>) {
 
 fun <T> T.repeatAsSequence(n: Int): Sequence<T> = generateSequence { this }.take(n)
 
-fun Coords.waterfallVisit(
+fun Coords.floodFillVisit(
     xMax: Int = Int.MAX_VALUE,
     yMax: Int = Int.MAX_VALUE,
     canTravel: (Coords, Coords) -> Boolean
 ) = sequence {
-    val coastLine = mutableSetOf(this@waterfallVisit)
+    val coastLine = mutableSetOf(this@floodFillVisit)
     val visited = mutableSetOf<Coords>()
     while (coastLine.isNotEmpty()) {
         val nextVisited = coastLine.first()
