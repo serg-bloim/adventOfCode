@@ -3,6 +3,7 @@ package advent24
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import utils.Coords
+import utils.dbg
 import utils.result
 import kotlin.math.min
 import kotlin.test.assertEquals
@@ -22,7 +23,7 @@ class Day13 {
         fun testReal() {
             val actual = solve(load_prod())
             result.println("Result: $actual")
-            assertEquals(78082, actual)
+            assertEquals(28887, actual)
             println("Result: $actual")
         }
 
@@ -33,18 +34,18 @@ class Day13 {
     }
 
     private fun calculateTokensToWin(btnA: Coords, btnB: Coords, prize: Coords): Int {
-        val maxPushesB = min(prize.x / btnB.x, prize.y / btnB.y)
         val minTokens = sequence {
-            for (btnBPushes in maxPushesB downTo 0) {
-                val dx = prize.x - btnBPushes * btnB.x
-                val dy = prize.y - btnBPushes * btnB.y
-                if (dx % btnA.x == 0 && dy % btnA.y == 0) {
-                    val btnAPushes = dx / btnA.x
-                    yield(btnBPushes + btnAPushes * 3)
+            for (btnAPushes in 0..100) {
+                for (btnBPushes in 0..100) {
+                    if (btnA.x * btnAPushes + btnB.x * btnBPushes == prize.x &&
+                        btnA.y * btnAPushes + btnB.y * btnBPushes == prize.y
+                    )
+                        yield(3 * btnAPushes + btnBPushes)
                 }
             }
         }.minOrNull()
-        return minTokens ?: 0
+        val res = minTokens ?: 0
+        return res
     }
 
     @Nested
