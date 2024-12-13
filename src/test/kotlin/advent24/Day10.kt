@@ -32,13 +32,51 @@ class Day10 {
             var res = 0
             field.forEachIndexed { coords, height ->
                 if (height == 0) {
-                    res += countTrails(field, coords)
+                    res += countTops(field, coords)
                 }
             }
             return res
         }
+
+
     }
 
+    @Nested
+    inner class Task2 {
+        @Test
+        fun testSmall() {
+            val actual = solve(load_test())
+            println("Result: $actual")
+            result.println("Result: $actual")
+            assertEquals(81, actual)
+        }
+
+        @Test
+        fun testReal() {
+            val actual = solve(load_prod())
+            result.println("Result: $actual")
+            println("Result: $actual")
+            assertEquals(875, actual)
+        }
+
+        fun solve(txt: String): Any {
+            val field = parseInput(txt)
+            var res = 0
+            field.forEachIndexed { coords, height ->
+                if (height == 0) {
+                    res += countTrails(field, coords)
+                }
+            }
+            return res
+
+        }
+    }
+
+    private fun countTops(field: Field<Int>, coords: Coords): Int {
+        val tops = mutableSetOf<Coords>()
+        registerTops(field, coords, tops)
+        return tops.size
+    }
 
     private fun countTrails(field: Field<Int>, coords: Coords): Int {
         val tops = mutableSetOf<Coords>()
@@ -57,37 +95,6 @@ class Day10 {
             paths += registerTops(field, next, tops)
         }
         return paths
-    }
-
-    @Nested
-    inner class Task2 {
-        @Test
-        fun testSmall() {
-            val actual = solve(load_test())
-            println("Result: $actual")
-            result.println("Result: $actual")
-            assertEquals(81, actual)
-        }
-
-        @Test
-        fun testReal() {
-            val actual = solve(load_prod())
-            result.println("Result: $actual")
-            println("Result: $actual")
-            assertEquals(55555555, actual)
-        }
-
-        fun solve(txt: String): Any {
-            val field = parseInput(txt)
-            var res = 0
-            field.forEachIndexed { coords, height ->
-                if (height == 0) {
-                    res += countTrails(field, coords)
-                }
-            }
-            return res
-
-        }
     }
 
     companion object {
