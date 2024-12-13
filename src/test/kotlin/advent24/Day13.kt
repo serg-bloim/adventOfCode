@@ -2,8 +2,6 @@ package advent24
 
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import utils.Coords
-import utils.dbg
 import utils.result
 import kotlin.math.min
 import kotlin.test.assertEquals
@@ -14,7 +12,7 @@ class Day13 {
         @Test
         fun testSmall() {
             val actual = solve(load_test())
-            assertEquals(480, actual)
+            assertEquals(480L, actual)
             result.println("Result: $actual")
             println("Result: $actual")
         }
@@ -23,24 +21,26 @@ class Day13 {
         fun testReal() {
             val actual = solve(load_prod())
             result.println("Result: $actual")
-            assertEquals(28887, actual)
+            assertEquals(28887L, actual)
             println("Result: $actual")
         }
 
-        fun solve(txt: String): Any {
+        fun solve(txt: String): Long {
             val machines = parseInput(txt)
             return machines.sumOf { (btnA, btnB, prize) -> calculateTokensToWin(btnA, btnB, prize) }
         }
     }
 
-    private fun calculateTokensToWin(btnA: Coords, btnB: Coords, prize: Coords): Int {
+    private fun calculateTokensToWin(btnA: LongPair, btnB: LongPair, prize: LongPair): Long {
+        val maxPushesB = min(prize.x / btnB.x, prize.y / btnB.y)
         val minTokens = sequence {
-            for (btnAPushes in 0..100) {
-                for (btnBPushes in 0..100) {
-                    if (btnA.x * btnAPushes + btnB.x * btnBPushes == prize.x &&
-                        btnA.y * btnAPushes + btnB.y * btnBPushes == prize.y
-                    )
-                        yield(3 * btnAPushes + btnBPushes)
+            for (btnBPushes in maxPushesB downTo 0) {
+                val dx = prize.x - btnBPushes * btnB.x
+                val dy = prize.y - btnBPushes * btnB.y
+                if (dx % btnA.x == 0L && dy % btnA.y == 0L) {
+                    val btnAPushes = dx / btnA.x
+                    if (btnAPushes == dy / btnA.y)
+                        yield(btnBPushes + btnAPushes * 3)
                 }
             }
         }.minOrNull()
@@ -67,7 +67,9 @@ class Day13 {
         }
 
         fun solve(txt: String): Any {
-            return 11111111
+            val machines = parseInput(txt)
+            return machines.sumOf { (btnA, btnB, prize) -> calculateTokensToWin(btnA, btnB, prize + 10000000000000L) }
+
         }
     }
 
@@ -81,7 +83,7 @@ class Day13 {
             return Resources().loadString("${res_prefix}_prod.txt")
         }
 
-        fun parseInput(txt: String): List<Triple<Coords, Coords, Coords>> {
+        fun parseInput(txt: String): List<Triple<LongPair, LongPair, LongPair>> {
             val btnRE = """Button \w: X\+(\d+), Y\+(\d+)""".toRegex()
             val prizeRE = """Prize: X=(\d+), Y=(\d+)""".toRegex()
             val data = txt.lineSequence()
@@ -92,12 +94,22 @@ class Day13 {
                     val (_, btnBX, btnBY) = btnRE.matchEntire(btnB)!!.groupValues
                     val (_, prizeX, prizeY) = prizeRE.matchEntire(prize)!!.groupValues
                     Triple(
-                        Coords(btnAX.toInt(), btnAY.toInt()),
-                        Coords(btnBX.toInt(), btnBY.toInt()),
-                        Coords(prizeX.toInt(), prizeY.toInt())
+                        LongPair(btnAX.toLong(), btnAY.toLong()),
+                        LongPair(btnBX.toLong(), btnBY.toLong()),
+                        LongPair(prizeX.toLong(), prizeY.toLong())
                     )
                 }.toList()
             return data
         }
     }
 }
+
+typealias LongPair = Pair<Long, Long>
+
+val LongPair.x: Long
+    get() = this.first
+
+val LongPair.y: Long
+    get() = this.second
+
+operator fun LongPair.plus(n: Long) = LongPair(x + n, y + n)
