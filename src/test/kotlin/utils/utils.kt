@@ -363,6 +363,42 @@ class Field<T>(val data: List<MutableList<T>>) {
         Field(data.mapIndexed { y, row -> row.mapIndexed { x, v -> op(Coords(x, y), v) }.toMutableList() })
 
     fun <V> map(op: (T) -> V) = mapIndexed { _, v -> op(v) }
+
+    fun withBorder(borderWidth: Int, borderValue: T): Field<T> {
+        val fieldWidth = this.width
+        val border = borderValue.repeatAsSequence(fieldWidth + 2 * borderWidth).toMutableList()
+        val oldData = data
+        val newData = sequence {
+            yield(border)
+            for (row in oldData) {
+                val newRow = ArrayList<T>()
+                newRow.addAll(borderValue.repeatAsSequence(borderWidth))
+                newRow.addAll(row)
+                newRow.addAll(borderValue.repeatAsSequence(borderWidth))
+                yield(newRow)
+            }
+            yield(border.toMutableList())
+        }.toList()
+        return Field(newData)
+    }
 }
 
-fun <T> T.repeatAsSequence(n: Int) = generateSequence { this }.take(n)
+fun <T> T.repeatAsSequence(n: Int): Sequence<T> = generateSequence { this }.take(n)
+
+fun Coords.waterfallVisit(
+    xMax: Int = Int.MAX_VALUE,
+    yMax: Int = Int.MAX_VALUE,
+    canTravel: (Coords, Coords) -> Boolean
+) = sequence {
+    val coastLine = mutableSetOf(this@waterfallVisit)
+    val visited = mutableSetOf<Coords>()
+    while (coastLine.isNotEmpty()) {
+        val nextVisited = coastLine.first()
+        coastLine.remove(nextVisited)
+        yield(nextVisited)
+        visited.add(nextVisited)
+        nextVisited.neighbors(xMax, yMax)
+            .filter { neighbor -> canTravel(nextVisited, neighbor) && neighbor !in visited }
+            .forEach { neighbor -> coastLine.add(neighbor) }
+    }
+}
