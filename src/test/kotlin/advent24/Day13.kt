@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import utils.result
 import kotlin.math.min
+import kotlin.math.roundToLong
 import kotlin.test.assertEquals
 
 class Day13 {
@@ -48,6 +49,26 @@ class Day13 {
         return res
     }
 
+    private fun calculateTokensToWin2(btnA: LongPair, btnB: LongPair, prize: LongPair): Long {
+        val ax = btnA.x.toDouble()
+        val ay = btnA.y.toDouble()
+        val bx = btnB.x.toDouble()
+        val by = btnB.y.toDouble()
+        val px = prize.x.toDouble()
+        val py = prize.y.toDouble()
+
+        val x = (py - by*px/bx) / (ay/ax - by/bx)
+        val an = (x/ax).roundToLong()
+        val intersectionX = btnA.x * an
+        val bn = (prize.x - intersectionX) / btnB.x
+
+        if (btnA.x * an + btnB.x * bn == prize.x &&
+            btnA.y * an + btnB.y * bn == prize.y){
+            return an * 3 + bn
+        }
+        return 0
+    }
+
     @Nested
     inner class Task2 {
         @Test
@@ -68,7 +89,7 @@ class Day13 {
 
         fun solve(txt: String): Any {
             val machines = parseInput(txt)
-            return machines.sumOf { (btnA, btnB, prize) -> calculateTokensToWin(btnA, btnB, prize + 10000000000000L) }
+            return machines.sumOf { (btnA, btnB, prize) -> calculateTokensToWin2(btnA, btnB, prize + 10000000000000L) }
 
         }
     }
