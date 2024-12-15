@@ -357,6 +357,11 @@ class Field<T>(val data: List<MutableList<T>>) {
     fun forEachIndexed(op: (Coords, T) -> Unit) =
         data.forEachIndexed { y, row -> row.forEachIndexed { x, v -> op(Coords(x, y), v) } }
 
+    fun findCoords(op: (T) -> Boolean): Coords? {
+        data.forEachIndexed { y, row -> row.forEachIndexed { x, v -> if (op(v)) return Coords(x, y) } }
+        return null
+    }
+
     fun forEach(op: (T) -> Unit) = forEachIndexed { _, v -> op(v) }
 
     fun <V> mapIndexed(op: (Coords, T) -> V) =
@@ -381,6 +386,9 @@ class Field<T>(val data: List<MutableList<T>>) {
         }.toList()
         return Field(newData)
     }
+
+    fun toString(cellToString: (T) -> String = { it.toString() }) =
+        data.joinToString("\n") { it.joinToString("", transform = cellToString) }
 }
 
 fun <T> T.repeatAsSequence(n: Int): Sequence<T> = generateSequence { this }.take(n)
