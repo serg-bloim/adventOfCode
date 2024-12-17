@@ -312,6 +312,10 @@ fun Coords.withinBox(width: Int, height: Int): Boolean {
     return x >= 0 && x < width && y >= 0 && y < height
 }
 
+fun <T> Coords.withinBox(field: Field<T>): Boolean {
+    return x >= 0 && x < field.width && y >= 0 && y < field.height
+}
+
 
 data class LongCoords(val x: Long, val y: Long)
 
@@ -387,8 +391,10 @@ class Field<T>(val data: List<MutableList<T>>) {
         return Field(newData)
     }
 
-    fun toString(cellToString: (T) -> String = { it.toString() }) =
+    fun toString(cellToString: (T) -> String) =
         data.joinToString("\n") { it.joinToString("", transform = cellToString) }
+
+    override fun toString() = toString { it.toString() }
 }
 
 fun <T> T.repeatAsSequence(n: Int): Sequence<T> = generateSequence { this }.take(n)
