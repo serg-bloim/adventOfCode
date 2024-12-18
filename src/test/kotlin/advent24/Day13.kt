@@ -125,12 +125,12 @@ class Day13 {
     }
 }
 
-typealias LongPair = Pair<Long, Long>
+private typealias LongPair = Pair<Long, Long>
 
-val LongPair.x: Long
+private val LongPair.x: Long
     get() = this.first
 
-val LongPair.y: Long
+private val LongPair.y: Long
     get() = this.second
 
-operator fun LongPair.plus(n: Long) = LongPair(x + n, y + n)
+private operator fun LongPair.plus(n: Long) = LongPair(x + n, y + n)

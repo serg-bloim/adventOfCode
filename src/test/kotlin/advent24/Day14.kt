@@ -229,7 +229,7 @@ class Day14 {
     }
 }
 
-fun main(args: Array<String>) {
+private fun main(args: Array<String>) {
 //    val cmd = arrayOf("/bin/sh", "-c", "stty raw </dev/tty")
 //    Runtime.getRuntime().exec(cmd).waitFor()
     val task2 = Day14().Task2()
