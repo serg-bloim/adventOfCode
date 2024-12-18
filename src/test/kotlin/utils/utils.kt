@@ -345,6 +345,16 @@ operator fun <E> List<E>.component6() = this[5]
 fun ceilingDiv(a: Int, b: Int) = (a + b - 1) / b
 
 class Field<T>(val data: List<MutableList<T>>) {
+    constructor(width: Int, height: Int, initOp: (Coords) -> T) : this(
+        (0..<height).map { y ->
+            val row = ArrayList<T>(width)
+            for (x in 0..<width) {
+                row.add(initOp(Coords(x, y)))
+            }
+            row
+        }.toList()
+    )
+
     val width = data[0].size
     val height = data.size
     operator fun contains(coords: Coords) = coords.withinBox(width, height)
