@@ -104,11 +104,9 @@ class Day18 {
         }
 
         private fun hasPath(field: Field<Int>, start: Coords, end: Coords): Boolean {
-            val connectedMemory = start.floodFillVisit(field.width - 1, field.height - 1)
-            { from, to ->
-                field[to] != CELL_CORRUPTED
-            }
-            return connectedMemory.contains(end)
+            val memoryConnectedToStart =
+                start.floodFillVisit(field.width - 1, field.height - 1) { from, to -> field[to] != CELL_CORRUPTED }
+            return memoryConnectedToStart.contains(end)
         }
     }
 
