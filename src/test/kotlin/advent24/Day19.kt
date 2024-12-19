@@ -55,12 +55,14 @@ class Day19 {
 
     @Nested
     inner class Task2 {
+        val cache = mutableMapOf<CharSequence, Long>()
+
         @Test
         fun testSmall() {
             val actual = solve(load_test())
             println("Result: $actual")
             result.println("Result: $actual")
-            assertEquals(5555555, actual)
+            assertEquals(16, actual)
         }
 
         @Test
@@ -68,11 +70,32 @@ class Day19 {
             val actual = solve(load_prod())
             result.println("Result: $actual")
             println("Result: $actual")
-            assertEquals(55555555, actual)
+            assertEquals(777669668613191, actual)
         }
 
         fun solve(txt: String): Any {
-            return 11111111
+            val (patterns, designs) = parseInput(txt)
+            var i = 0
+            return designs
+//                .onEachIndexed { index, s -> println("Processing $index/${designs.size}") }
+                .sumOf { design ->
+                    println("Processing ${i++}/${designs.size}")
+                    isPossible(design, patterns)
+                }
+        }
+
+        private fun isPossible(design: CharSequence, patterns: List<String>): Long {
+            if (design in cache) return cache[design]!!
+            val matchingPatterns = patterns.asSequence().filter { design.startsWith(it) }
+            var res = 0L
+            for (pat in matchingPatterns) {
+                if (pat.length == design.length)
+                    res += 1
+                else
+                    res += isPossible(design.drop(pat.length), patterns)
+            }
+            cache[design] = res
+            return res
         }
     }
 
