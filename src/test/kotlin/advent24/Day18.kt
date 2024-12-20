@@ -46,7 +46,7 @@ class Day18 {
                 field[to] = min(field[from] + 1, field[to])
                 true
             }
-            cells.forEach { }
+            cells.count() // It needs any terminating operation to run through the algorithm
             return field[Coords(maxX, maxY)]
         }
     }
