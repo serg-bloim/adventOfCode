@@ -401,6 +401,8 @@ class Field<T>(val data: List<MutableList<T>>) {
         return Field(newData)
     }
 
+    fun copy() = map { it }
+
     fun toString(cellToString: (T) -> String) =
         data.joinToString("\n") { it.joinToString("", transform = cellToString) }
 
@@ -410,8 +412,8 @@ class Field<T>(val data: List<MutableList<T>>) {
 fun <T> T.repeatAsSequence(n: Int): Sequence<T> = generateSequence { this }.take(n)
 
 fun Coords.floodFillVisit(
-    xMax: Int = Int.MAX_VALUE,
-    yMax: Int = Int.MAX_VALUE,
+    xMax: Int = Int.MAX_VALUE - 1,
+    yMax: Int = Int.MAX_VALUE - 1,
     canTravel: (Coords, Coords) -> Boolean
 ) = sequence {
     val coastLine = mutableSetOf(this@floodFillVisit)
