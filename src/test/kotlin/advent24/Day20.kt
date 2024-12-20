@@ -41,7 +41,7 @@ class Day20 {
             val startXY = initField.findCoords { it == 'S' }!!
             val endXY = initField.findCoords { it == 'E' }!!
 
-            val distToStartField  = initField.map {
+            val distToStartField = initField.map {
                 when (it) {
                     '#' -> HAS_WALL
                     else -> Int.MAX_VALUE
@@ -76,7 +76,7 @@ class Day20 {
             val actual = solve(load_test(), 76)
             println("Result: $actual")
             result.println("Result: $actual")
-            assertEquals(55555555555, actual)
+            assertEquals(3, actual)
         }
 
         @Test
@@ -84,13 +84,44 @@ class Day20 {
             val actual = solve(load_prod(), 100)
             result.println("Result: $actual")
             println("Result: $actual")
-            assertEquals(55555555555, actual)
+            assertEquals(1008040, actual)
         }
 
         fun solve(txt: String, threshold: Int): Any {
-            return 555
+            val initField = parseInput(txt)
+            val startXY = initField.findCoords { it == 'S' }!!
+            val endXY = initField.findCoords { it == 'E' }!!
+
+            val distToStartField = initField.map {
+                when (it) {
+                    '#' -> HAS_WALL
+                    else -> Int.MAX_VALUE
+                }
+            }
+            val distToEndField = distToStartField.copy()
+            floodFill(distToStartField, startXY)
+            floodFill(distToEndField, endXY)
+            val optimalTime = distToStartField[endXY]
+
+            var cheatsOvenThreshold = 0
+            distToStartField.forEachIndexed { cheatStartXY, dist2start ->
+                if (dist2start != HAS_WALL)
+                    for (cheatEndXY in neighborsByDist(cheatStartXY, 20)) {
+                        if (!cheatEndXY.withinBox(distToEndField)) continue
+                        val dist2end = distToEndField[cheatEndXY]
+                        if (dist2end == HAS_WALL) continue
+                        val cheatPathCost = dist2start + dist2end + manhattanDistance(cheatStartXY, cheatEndXY)
+                        val cheatGain = optimalTime - cheatPathCost
+                        if (cheatGain >= threshold)
+                            cheatsOvenThreshold++
+                    }
+            }
+            return cheatsOvenThreshold
         }
     }
+
+    private fun manhattanDistance(xy1: Coords, xy2: Coords) =
+        (xy1.x - xy2.x).absoluteValue + (xy1.y - xy2.y).absoluteValue
 
     fun floodFill(field: Field<Int>, initXY: Coords) {
         field[initXY] = 0
@@ -101,7 +132,16 @@ class Day20 {
             } else {
                 false
             }
-        }.count() // Any terminating operation works to run the sequence through the algorithm
+        }.count()
+    }
+
+    private fun neighborsByDist(xy: Coords, dist: Int) = sequence {
+        for (y in xy.y - dist..xy.y + dist) {
+            val distRemaining = dist - (y - xy.y).absoluteValue
+            for (x in xy.x - distRemaining..xy.x + distRemaining) {
+                yield(Coords(x, y))
+            }
+        }
     }
 
     private fun neighborsDist2(xy: Coords) = sequenceOf(
