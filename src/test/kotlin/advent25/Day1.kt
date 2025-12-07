@@ -8,6 +8,7 @@ import utils.result
 import kotlin.test.assertEquals
 
 class Day1 {
+    val DIAL_MAX = 100
     init {
 //        System.setProperty(SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "DEBUG")
     }
@@ -60,11 +61,45 @@ class Day1 {
             val actual = solve(load_prod())
             result.println("Result: $actual")
             println("Result: $actual")
-            assertEquals(55555555, actual)
+            assertEquals(6634, actual)
+        }
+
+        @Test
+        fun testCountZeroPasses() {
+            assertEquals(0, countZeroPasses(50, 10))
+            assertEquals(0, countZeroPasses(50, -10))
+            assertEquals(0, countZeroPasses(-50, -10))
+            assertEquals(0, countZeroPasses(-50, 10))
+
+            assertEquals(1, countZeroPasses(50, 50))
+            assertEquals(1, countZeroPasses(50, -50))
+            assertEquals(1, countZeroPasses(-50, -50))
+            assertEquals(1, countZeroPasses(-50, 50))
+
+            assertEquals(2, countZeroPasses(50, 200))
+            assertEquals(2, countZeroPasses(50, -200))
+            assertEquals(2, countZeroPasses(-50, -200))
+            assertEquals(2, countZeroPasses(-50, 200))
         }
 
         fun solve(txt: String): Any {
-            return 11111111
+            val data = parseInput(txt)
+            val initState = 50
+            var state = initState
+            var zeroPasses = 0
+            for (step in data) {
+                zeroPasses += countZeroPasses(state, step)
+                state = (state + step) % DIAL_MAX
+            }
+            return zeroPasses
+        }
+
+        fun countZeroPasses(state: Int, step: Int): Int {
+            if (step < 0) return countZeroPasses(-state, -step)
+            val normalizedState = (state + DIAL_MAX) % DIAL_MAX
+            val newState = normalizedState + step
+            val cycles = newState / DIAL_MAX
+            return cycles
         }
     }
 
