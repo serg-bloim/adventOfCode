@@ -42,3 +42,5 @@ bin/
 .DS_Store
 /.idea/
 /gradle/
+/dbg.txt
+/result.txt

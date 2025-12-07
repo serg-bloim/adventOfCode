@@ -428,3 +428,9 @@ fun Coords.floodFillVisit(
             .forEach { neighbor -> coastLine.add(neighbor) }
     }
 }
+
+fun assertEquals(expected: Any, actual: Any) {
+    val expected = if (expected is Int) expected.toLong() else expected
+    val actual = if (actual is Int) actual.toLong() else actual
+    assertEquals(expected, actual)
+}
