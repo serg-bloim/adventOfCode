@@ -52,7 +52,7 @@ class Day1 {
             val actual = solve(load_test())
             println("Result: $actual")
             result.println("Result: $actual")
-            assertEquals(5555555, actual)
+            assertEquals(6, actual)
         }
 
         @Test
