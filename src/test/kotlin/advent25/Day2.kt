@@ -50,15 +50,9 @@ class Day2 {
 
     fun solve(txt: String, isValid: (Long) -> Boolean): Any {
         val data = parseInput(txt)
-        var sum = 0L
-        for (range in data) {
-            val (start, end) = range
-            for (n in start..end) {
-                if (!isValid(n)) {
-                    sum += n
-                }
-            }
-        }
+        val sum = data.flatMap { (start, end) -> start..end }
+            .filterNot(isValid)
+            .sum()
         return sum
     }
 
@@ -89,13 +83,13 @@ class Day2 {
 
         fun <T> Sequence<T?>.allEqual(): Boolean = distinct().count() == 1
 
+        fun factorsOf(n: Int) = (1..n / 2).filter { n % it == 0 }
+
         fun isValid(n: Long): Boolean {
             val str = n.toString()
-            for (chunkSize in 1..str.length / 2) {
-                if (str.length % chunkSize == 0) {
-                    if (str.asSequence().chunked(chunkSize).allEqual())
-                        return false
-                }
+            for (chunkSize in factorsOf(str.length)) {
+                if (str.asSequence().chunked(chunkSize).allEqual())
+                    return false
             }
             return true
         }
