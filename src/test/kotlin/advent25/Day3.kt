@@ -5,8 +5,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import utils.assertEquals
 import utils.result
-import kotlin.io.path.Path
-import kotlin.io.path.createFile
 
 class Day3 {
     val logger = KotlinLogging.logger {}
@@ -32,8 +30,7 @@ class Day3 {
 
         fun solve(txt: String): Any {
             val data = parseInput(txt)
-            val res = data.map { findMaxJoltage(it) }.sum()
-            return res
+            return data.sumOf { findMaxJoltage(it) }
         }
 
         private fun findMaxJoltage(batteries: List<Int>): Int {
@@ -41,8 +38,10 @@ class Day3 {
                 .take(batteries.size - 1)
                 .withIndex()
                 .maxBy { it.value }
-            val secondMax = batteries.subList(firstMax.index + 1, batteries.size)
-                .asSequence().max()
+            val secondMax = batteries
+                .asSequence()
+                .drop(firstMax.index + 1)
+                .max()
             return firstMax.value * 10 + secondMax
         }
     }
