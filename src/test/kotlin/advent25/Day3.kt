@@ -67,9 +67,7 @@ class Day3 {
 
         fun solve(txt: String): Any {
             val data = parseInput(txt)
-            return data.map { findMaxJoltage(it, 12) }
-//                .onEach { logger.info { it } }
-                .sum()
+            return data.sumOf { findMaxJoltage(it, 12) }
         }
 
         private fun findMaxJoltage(batteries: List<Long>, n: Int): Long {
@@ -77,7 +75,7 @@ class Day3 {
                 return batteries.max()
             }
             val firstMax = batteries.asSequence()
-                .take(batteries.size - n + 1)
+                .take(batteries.size - (n - 1))
                 .withIndex()
                 .maxBy { it.value }
             val rest = findMaxJoltage(batteries.subList(firstMax.index + 1, batteries.size), n - 1)
