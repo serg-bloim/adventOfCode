@@ -14,7 +14,7 @@ class Day8 {
 
     class Solution(junctions: List<Coords3D>) {
         val junction2Circuit = junctions.associateWithTo(mutableMapOf()) { mutableSetOf(it) }
-        val pairs = sequence {
+        val connections = sequence {
             var sublist = junctions
             while (sublist.isNotEmpty()) {
                 val first = sublist.first()
@@ -23,10 +23,11 @@ class Day8 {
                 sublist = rest
             }
         }.toMutableList().also { it.sortBy { (j1, j2) -> distSquared(j1, j2) } }
-        val connectionIter = pairs.iterator()
-        fun connectNextClosest() {
+        val connectionIter = connections.iterator()
+        fun connectNextClosest(): Pair<Coords3D, Coords3D> {
             assert(connectionIter.hasNext())
-            val (j1, j2) = connectionIter.next()
+            val conn = connectionIter.next()
+            val (j1, j2) = conn
             val circ1 = junction2Circuit[j1]!!
             val circ2 = junction2Circuit[j2]!!
             if (circ1 !== circ2) {
@@ -35,6 +36,7 @@ class Day8 {
                     junction2Circuit[j] = circ1
                 }
             }
+            return conn
         }
 
         fun distSquared(j1: Coords3D, j2: Coords3D) = (j1.first - j2.first).pow(2) +
@@ -90,11 +92,22 @@ class Day8 {
             val actual = solve(load_prod())
             result.println("Result: $actual")
             logger.info { "Result: $actual" }
-            assertEquals(55555555, actual)
+            assertEquals(9253260633, actual)
         }
 
         fun solve(txt: String): Any {
-            return 11111111
+            val data = parseInput(txt)
+            val sol = Solution(data)
+            while (sol.connectionIter.hasNext()){
+                val lastConnection = sol.connectNextClosest()
+                val anyCircuit = sol.junction2Circuit.values.first()
+                if(anyCircuit.size == sol.junction2Circuit.size){
+                    // If any circuit contains all junctions, all are connected then.
+                    val (j1, j2) = lastConnection
+                    return j1.first * j2.first
+                }
+            }
+            return -1
         }
     }
 
