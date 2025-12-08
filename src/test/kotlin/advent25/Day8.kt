@@ -12,6 +12,36 @@ typealias Coords3D = Triple<Long, Long, Long>
 class Day8 {
     val logger = KotlinLogging.logger {}
 
+    class Solution(junctions: List<Coords3D>) {
+        val junction2Circuit = junctions.associateWithTo(mutableMapOf()) { mutableSetOf(it) }
+        val pairs = sequence {
+            var sublist = junctions
+            while (sublist.isNotEmpty()) {
+                val first = sublist.first()
+                val rest = sublist.subList(1, sublist.size)
+                yieldAll(rest.map { Pair(first, it) })
+                sublist = rest
+            }
+        }.toMutableList().also { it.sortBy { (j1, j2) -> distSquared(j1, j2) } }
+        val connectionIter = pairs.iterator()
+        fun connectNextClosest() {
+            assert(connectionIter.hasNext())
+            val (j1, j2) = connectionIter.next()
+            val circ1 = junction2Circuit[j1]!!
+            val circ2 = junction2Circuit[j2]!!
+            if (circ1 !== circ2) {
+                circ1.addAll(circ2)
+                for(j in circ2){
+                    junction2Circuit[j] = circ1
+                }
+            }
+        }
+
+        fun distSquared(j1: Coords3D, j2: Coords3D) = (j1.first - j2.first).pow(2) +
+                (j1.second - j2.second).pow(2) +
+                (j1.third - j2.third).pow(2)
+    }
+
     @Nested
     inner class Task1 {
 
@@ -31,44 +61,13 @@ class Day8 {
             logger.info { "Result: $actual" }
         }
 
-        fun solve(txt: String, n:Int): Any {
+        fun solve(txt: String, n: Int): Any {
             val data = parseInput(txt)
-            val connections = data.associateWith { mutableListOf<Coords3D>() }
-            val pairs = sequence {
-                var sublist = data
-                while (sublist.isNotEmpty()) {
-                    val first = sublist.first()
-                    val rest = sublist.subList(1, sublist.size)
-                    yieldAll(rest.map { Pair(first, it) })
-                    sublist = rest
-                }
-            }.toMutableList()
-            pairs.sortBy { (from, to) ->
-                (from.first - to.first).pow(2) +
-                        (from.second - to.second).pow(2) +
-                        (from.third - to.third).pow(2)
-            }
-            pairs.asSequence().take(n)
-                .forEach { (j1, j2) ->
-                    connections[j1]!!.add(j2)
-                    connections[j2]!!.add(j1)
-                }
-            val junctions2process = data.toMutableSet()
-            val circuits = mutableListOf<Set<Coords3D>>()
-            while (junctions2process.isNotEmpty()) {
-                val nextOrigin = junctions2process.first()
-                val circuit = mutableSetOf<Coords3D>()
-                circuits.add(circuit)
-                fun traverse(junction: Coords3D) {
-                    if(junction !in circuit) {
-                        circuit.add(junction)
-                        connections[junction]!!.forEach { j -> traverse(j) }
-                    }
-                }
-                traverse(nextOrigin)
-                junctions2process.removeAll(circuit)
-            }
-            val res = circuits.map { it.size }
+            val sol = Solution(data)
+            repeat(n) { sol.connectNextClosest() }
+            val res = sol.junction2Circuit.values.distinct()
+                .asSequence()
+                .map { it.size }
                 .sortedDescending()
                 .take(3)
                 .reduce { acc, i -> acc * i }
@@ -83,7 +82,7 @@ class Day8 {
             val actual = solve(load_test())
             result.println("Result: $actual")
             logger.info { "Result: $actual" }
-            assertEquals(5555555, actual)
+            assertEquals(25272, actual)
         }
 
         @Test
