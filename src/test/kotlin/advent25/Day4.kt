@@ -76,7 +76,7 @@ class Day4 {
             val actual = solve(load_prod())
             result.println("Result: $actual")
             logger.info { "Result: $actual" }
-            assertEquals(55555555, actual)
+            assertEquals(8277, actual)
         }
 
         fun solve(txt: String): Any {
@@ -106,16 +106,19 @@ class Day4 {
                     }
                 }
             }
+            logger.info { flied2str(data, candidates4Removal) }
             var removedRolls = 0
             while (candidates4Removal.isNotEmpty()) {
                 val (x, y) = candidates4Removal.first().also { candidates4Removal.remove(it) }
                 data[y][x] = -1
+                logger.info { "Removing candidate ($x, $y)" }
                 removedRolls += 1
                 for (dx in -1..1) {
                     for (dy in -1..1) {
                         data[y + dy][x + dx] -= 1
                         if (data[y + dy][x + dx] == 3) {
-                            candidates4Removal.add(Pair(x, y))
+                            candidates4Removal.add(Pair(x + dx, y + dy))
+                            logger.info { "Adding new candidate ($x, $y)" }
                         }
                     }
                 }
@@ -123,6 +126,14 @@ class Day4 {
             return removedRolls
         }
     }
+
+    fun flied2str(field: List<IntArray>, highlightedCells: Collection<Pair<Int, Int>>) = field.mapIndexed { y, line ->
+        line.mapIndexed { x, v ->
+            if (Pair(x, y) in highlightedCells) '#'
+            else if (v < 0) '.'
+            else '@'
+        }.joinToString("")
+    }.joinToString("\n")
 
     companion object {
         val res_prefix = this::class.java.enclosingClass.simpleName.lowercase()
@@ -137,7 +148,6 @@ class Day4 {
         fun parseInput(txt: String): List<String> {
             val data = txt.lines()
                 .filterNot { it.isEmpty() }
-                .map { ".$it." }
             return data
         }
     }
