@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import utils.assertEquals
 import utils.result
+import kotlin.math.max
 
 class Day5 {
     val logger = KotlinLogging.logger {}
@@ -52,7 +53,7 @@ class Day5 {
             val actual = solve(load_test())
             result.println("Result: $actual")
             logger.info { "Result: $actual" }
-            assertEquals(5555555, actual)
+            assertEquals(14, actual)
         }
 
         @Test
@@ -60,11 +61,22 @@ class Day5 {
             val actual = solve(load_prod())
             result.println("Result: $actual")
             logger.info { "Result: $actual" }
-            assertEquals(55555555, actual)
+            assertEquals(358155203664116, actual)
         }
 
         fun solve(txt: String): Any {
-            return 11111111
+            val (ranges, _) = parseInput(txt)
+            ranges.sortBy { it.first() }
+            var lastProcessedId = Long.MIN_VALUE
+            var freshIds = 0L
+            for (range in ranges) {
+                if (range.last > lastProcessedId) {
+                    val start = max(lastProcessedId + 1, range.first)
+                    freshIds += (range.last - start + 1)
+                    lastProcessedId = range.last
+                }
+            }
+            return freshIds
         }
     }
 
