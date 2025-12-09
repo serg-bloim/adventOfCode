@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import utils.assertEquals
 import utils.result
+import java.math.BigInteger
 
 class Day6 {
     val logger = KotlinLogging.logger {}
@@ -52,7 +53,7 @@ class Day6 {
             val actual = solve(load_test())
             result.println("Result: $actual")
             logger.info { "Result: $actual" }
-            assertEquals(5555555, actual)
+            assertEquals(BigInteger.valueOf(3263827), actual)
         }
 
         @Test
@@ -60,11 +61,40 @@ class Day6 {
             val actual = solve(load_prod())
             result.println("Result: $actual")
             logger.info { "Result: $actual" }
-            assertEquals(55555555, actual)
+            assertEquals(BigInteger.valueOf(10389131401929), actual)
         }
 
         fun solve(txt: String): Any {
-            return 11111111
+            val originalLines = txt.lines()
+            val width = originalLines.map { it.length }.max()
+            val transposedLines = IntRange(0, width).reversed()
+                .asSequence()
+                .map { column ->
+                    val buffer = StringBuilder()
+                    originalLines.forEach { line ->
+                        buffer.append(line.getOrElse(column) { ' ' })
+                    }
+                    buffer.toString()
+                }
+                .filterNot { it.isBlank() }
+            var group = mutableListOf<Long>()
+            var globalRes = BigInteger.valueOf(0)
+            for (tline in transposedLines) {
+                val (numStr, opStr) = """(\d+)\s*(\+|\*)?""".toRegex().matchEntire(tline.trim())!!.destructured
+                val num = numStr.toLong()
+                group.add(num)
+                val op: ((Long, Long) -> Long)? = when (opStr) {
+                    "+" -> Long::plus
+                    "*" -> Long::times
+                    else -> null
+                }
+                if (op != null) {
+                    val groupRes = group.reduce(op)
+                    globalRes = globalRes.add(BigInteger.valueOf(groupRes))
+                    group.clear()
+                }
+            }
+            return globalRes
         }
     }
 
