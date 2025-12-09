@@ -434,3 +434,13 @@ fun assertEquals(expected: Any, actual: Any) {
     val actual = if (actual is Int) actual.toLong() else actual
     assertEquals(expected, actual)
 }
+
+class RateLimiter {
+    private var i = 0
+    fun onEach(n: Int, action: (Int) -> Unit) {
+        i += 1
+        if (i % n == 0) {
+            action(i)
+        }
+    }
+}
