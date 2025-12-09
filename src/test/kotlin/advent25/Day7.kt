@@ -53,7 +53,7 @@ class Day7 {
             val actual = solve(load_test())
             result.println("Result: $actual")
             logger.info { "Result: $actual" }
-            assertEquals(5555555, actual)
+            assertEquals(40, actual)
         }
 
         @Test
@@ -61,11 +61,23 @@ class Day7 {
             val actual = solve(load_prod())
             result.println("Result: $actual")
             logger.info { "Result: $actual" }
-            assertEquals(55555555, actual)
+            assertEquals(25592971184998, actual)
         }
 
         fun solve(txt: String): Any {
-            return 11111111
+            val (startPos, splitters) = parseInput(txt)
+            val beams = mutableMapOf(startPos to 1L)
+            for (layer in splitters) {
+                val readCopy = beams.entries.toList()
+                for ((beamLoc, timelines) in readCopy) {
+                    if (beamLoc in layer) {
+                        beams.remove(beamLoc)
+                        beams[beamLoc + 1] = (beams[beamLoc + 1] ?: 0) + timelines
+                        beams[beamLoc - 1] = (beams[beamLoc - 1] ?: 0) + timelines
+                    }
+                }
+            }
+            return beams.values.sum()
         }
     }
 
