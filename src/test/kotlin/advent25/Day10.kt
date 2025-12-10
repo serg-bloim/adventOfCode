@@ -43,7 +43,7 @@ class Day10 {
     }
 
     private fun pickButtons(lights: BooleanArray, lightsGoal: List<Boolean>, buttons: List<List<Int>>): Int {
-        if (buttons.size == 0) {
+        if (buttons.isEmpty()) {
             return if (lightsEqual(lights, lightsGoal)) 0 else 99999999
         }
         // don't push the first btn
@@ -69,7 +69,7 @@ class Day10 {
             val actual = solve(load_test())
             result.println("Result: $actual")
             logger.info { "Result: $actual" }
-            assertEquals(5555555, actual)
+            assertEquals(33, actual)
         }
 
         @Test
@@ -80,9 +80,54 @@ class Day10 {
             assertEquals(55555555, actual)
         }
 
-        fun solve(txt: String): Any {
-            return 11111111
+        @Test
+        fun testReal2() {
+            val actual = solve(load_prod())
+            result.println("Result: $actual")
+            logger.info { "Result: $actual" }
+            assertEquals(55555555, actual)
         }
+
+        fun solve(txt: String): Any {
+            val machines = parseInput(txt)
+            val total = machines.sumOf { (lightsGoal, buttons, joltage) ->
+                logger.info { "Working on $joltage" }
+                getJoltagePushes(buttons, joltage)
+            }
+            return total
+        }
+
+        fun getJoltagePushes(buttons: List<List<Int>>, goal: List<Int>): Int {
+            val state = goal.map { 0 }.toMutableList()
+            return getJoltagePushesRec(state, buttons, goal, 0, 999999999)
+        }
+
+        private fun getJoltagePushesRec(state: MutableList<Int>, buttons: List<List<Int>>, goal: List<Int>, pushesDone: Int, minimal: Int): Int {
+//            if (pushesDone >= minimal) return minimal
+            if (buttons.isEmpty()) {
+                return if (state.zip(goal).all { (s, g) -> s == g }) 0
+                else 9999999
+            }
+            val nextBtn = buttons.first()
+            val restBtns = buttons.subList(1, buttons.size)
+            // no push
+            val noPush = getJoltagePushesRec(state, restBtns, goal, pushesDone, minimal)
+            var minimal = min(minimal, noPush)
+            // push
+            for (cnt in nextBtn) {
+                state[cnt] += 1
+            }
+            val push = if (checkNoOverflow(state, goal))
+                1 + getJoltagePushesRec(state, buttons, goal, pushesDone + 1, minimal)
+            else
+                9999999
+            for (cnt in nextBtn) {
+                state[cnt] -= 1
+            }
+            return min(push, noPush)
+        }
+
+        private fun checkNoOverflow(state: MutableList<Int>, goal: List<Int>) = state.zip(goal).all { (s, g) -> s <= g }
     }
 
     companion object {
