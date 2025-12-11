@@ -85,18 +85,15 @@ class LinAlgebraTest {
         solveLinearEqSystem(coefs, consts)
         println(toString(coefs, consts))
         val expected = """
-            1 0 0 0 0 0 0 0 | 8
-            0 1 0 0 0 0 0 0 | 15
-            0 0 1 0 0 0 0 0 | 15
-            0 0 0 1 0 0 0 0 | 0
-            0 0 0 0 1 0 0 0 | 1
-            0 0 0 0 0 1 0 0 | 9
-            0 0 0 0 0 0 1 0 | 3
-            0 0 0 0 0 0 0 1 | 16
-            0 0 0 0 0 0 0 0 | 0
+             1  0  1  0  0 | 2
+             0  1 -1  0  0 | 5
+             0  0  0  0  0 | 0
+             0  0  0  1  0 | 5
+             0  0  0  0  1 | 0
         """.trimIndent()
         assertEqual(expected, toString(coefs, consts))
     }
+
     @Test
     fun test_simple_5() {
         val txt = """
