@@ -2,6 +2,7 @@ package utils
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.math.abs
+import kotlin.math.min
 
 fun solveLinearEqSystem(coefs: Array<Array<Int>>, consts: Array<Int>) {
     val logger = KotlinLogging.logger("solveLinearEqSystem")
@@ -37,42 +38,49 @@ fun solveLinearEqSystem(coefs: Array<Array<Int>>, consts: Array<Int>) {
         if (abs(n) == 1) true
         else (consts[rowInd] % n == 0) && coefs[rowInd].all { it % n == 0 }
 
-    for (j in coefs[0].indices) {
-        // Find any row below j that has non-zero value at j and swap into j pos
+    var diagOffset = 0
+    val minDimension = min(coefs.size, coefs[0].size)
+    for (j in 0 until minDimension) {
+        while (j + diagOffset in coefs[0].indices) {
+            // Find any row below j that has non-zero value at j and swap into j pos
 //        logger.info { "Step: $j\n" + toString(coefs, consts) }
-        val nonNullRowInd = coefs.withIndex()
-            .firstOrNull() { (index, row) -> index >= j && row[j] != 0 && rowDivisible(index, row[j]) }
-            ?.index
-        if (nonNullRowInd == null) {
-            val check = coefs.withIndex().all { (index, row) -> index < j || row[j] == 0 }
-            assert(check)
+            val hasNonNullRow = coefs
+                .withIndex()
+                .any { (index, row) -> index >= j && row[j + diagOffset] != 0 }
+            if (hasNonNullRow) {
+                break
+            } else {
+                diagOffset++
+            }
         }
+        val pivotColumn = j + diagOffset
+        if (pivotColumn !in coefs[0].indices) break
+        val nonNullRowInd = coefs.asSequence().withIndex()
+            .filter { (index, row) -> index >= j && row[pivotColumn] != 0 }
+            .filter { (index, row) -> rowDivisible(index, row[pivotColumn]) } // Need it only cause we don't have fractions
+            .map { it.index }
+            .first()
 
-        if (nonNullRowInd != null) {
-            if (!(coefs[nonNullRowInd][j] == 1)) {
-                1 + 1
-            }
-            swapRows(j, nonNullRowInd)
-            if (coefs[j][j] != 1) {
-                //normalize row
-                val div = coefs[j][j]
-                divRow(j, div)
-            }
-            // make sure all following rows have 0 in j column by subtracting j row from it
-            for (k in (j + 1) until coefs.size) {
-                val times = coefs[k][j]
+        swapRows(j, nonNullRowInd)
+        if (coefs[j][j] != 1) {
+            //normalize row
+            val div = coefs[j][pivotColumn]
+            divRow(j, div)
+        }
+        // zeroing out all other rows in column j
+        for (k in coefs.indices) {
+            if (k != j) {
+                val times = coefs[k][pivotColumn]
                 subtractRow(k, j, times)
             }
-        } else {
-            1 + 1
         }
     }
-    for (j in coefs[0].indices.reversed()) {
-        for (k in 0 until j) {
-            val times = coefs[k][j]
-            subtractRow(k, j, times)
-        }
-    }
+//    for (j in coefs[0].indices.reversed()) {
+//        for (k in 0 until j) {
+//            val times = coefs[k][j]
+//            subtractRow(k, j, times)
+//        }
+//    }
 }
 
 fun parseLinEqSystem(txt: String): Pair<Array<Array<Int>>, Array<Int>> =

@@ -87,9 +87,9 @@ class LinAlgebraTest {
         val expected = """
              1  0  1  0  0 | 2
              0  1 -1  0  0 | 5
-             0  0  0  0  0 | 0
              0  0  0  1  0 | 5
              0  0  0  0  1 | 0
+             0  0  0  0  0 | 0
         """.trimIndent()
         assertEqual(expected, toString(coefs, consts))
     }
@@ -107,7 +107,11 @@ class LinAlgebraTest {
         solveLinearEqSystem(coefs, consts)
         println(toString(coefs, consts))
         val expected = """
-
+                 1  0  0  0 -1  0 | 3
+                 0  1  0  0  1  0 | 10
+                 0  0  1  0  1  0 | 13
+                 0  0  0  1  0  0 | 13
+                 0  0  0  0  0  1 | 11
         """.trimIndent()
         assertEqual(expected, toString(coefs, consts))
     }
@@ -137,7 +141,7 @@ class LinAlgebraTest {
     fun assertEqual(expectedLinEqSys: String, actualLinEqSys: String) {
         fun transform(txt: String): String {
             val (coefs, consts) = parseLinEqSystem(txt)
-            return toString(coefs, consts)
+            return "\n" + toString(coefs, consts) + "\n"
         }
         assertEquals(transform(expectedLinEqSys), transform(actualLinEqSys))
     }
