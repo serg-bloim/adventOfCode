@@ -97,6 +97,23 @@ class LinAlgebraTest {
         """.trimIndent()
         assertEqual(expected, toString(coefs, consts))
     }
+    @Test
+    fun test_simple_5() {
+        val txt = """
+            1 1 0 0 0 0 | 13
+            0 1 0 1 1 0 | 23
+            1 0 1 1 0 1 | 40
+            0 0 1 0 1 1 | 24
+            1 0 1 0 0 0 | 16
+        """.trimIndent()
+        val (coefs, consts) = parseLinEqSystem(txt)
+        solveLinearEqSystem(coefs, consts)
+        println(toString(coefs, consts))
+        val expected = """
+
+        """.trimIndent()
+        assertEqual(expected, toString(coefs, consts))
+    }
 
     @Test
     fun testSolveLinEqSys() {
