@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 import utils.RateLimiter
 import utils.assertEquals
 import utils.result
-import kotlin.math.abs
+import utils.solveLinearEqSystem
 import kotlin.math.min
 import kotlin.math.sqrt
 
@@ -176,7 +176,6 @@ class Day10 {
             return vec.map { it.toDouble() / magnitude }
         }
 
-
         private fun checkStateIfFinished(state: MutableList<Int>, goal: List<Int>): StateResult {
             var hasLess = false
             var hasMore = false
@@ -244,39 +243,12 @@ class Day10 {
     }
 
     @Test
-    fun testSolveLinEqSys2() {
-        /**
-         * x = 1
-         * y = 2
-         * z = 3
-         * 1x  1y  3z = 12
-         * 3x  1y  1z = 8
-         * 1x  3y  1z = 10
-         *
-         */
-        val coefs = """
-            01111101
-            11110100
-            10111100
-            00000111
-            10011101
-            00100110
-            11111001
-            00011010
-            10111000
-        """.trimIndent().lines().filterNot { it.isBlank() }.map { it.asSequence().map { it.toString().toInt() }.toList().toTypedArray() }.toTypedArray()
-        val consts = arrayOf(56, 47, 33, 28, 34, 27, 55, 4, 24)
-        solveLinearEqSystem(coefs, consts)
-        println(coefs)
-        println(consts.toList())
-    }
-
-    @Test
     fun testSimulateButtonPushes() {
         val machines = parseInput(load_test())
-        val (lights, buttons, joltages) = machines.drop(1).first()
+        val (lights, buttons, joltages) = machines.drop(0).first()
         val consts = joltages.toTypedArray()
         val coefs = consts.indices.map { ind -> buttons.map { btn -> ind in btn }.map { if (it) 1 else 0 }.toTypedArray() }.toTypedArray()
+        println(utils.toString(coefs, consts))
         solveLinearEqSystem(coefs, consts)
         val pushes = consts.toList()
         println(pushes.sum())
@@ -291,75 +263,34 @@ class Day10 {
         println(joltages)
     }
 
-    fun solveLinearEqSystem(coefs: Array<Array<Int>>, consts: Array<Int>) {
-        fun <T> Array<T>.swap(i: Int, j: Int) {
-            if (i == j) return
-            val tmp = get(i)
-            set(i, get(j))
-            set(j, tmp)
+    @Test
+    fun test_solveManyLinearEqSystems() {
+        fun parse(buttons: List<List<Int>>, joltages: List<Int>): Pair<Array<Array<Int>>, Array<Int>> {
+            val consts = joltages.toTypedArray()
+            val coefs = consts.indices.map { ind -> buttons.map { btn -> ind in btn }.map { if (it) 1 else 0 }.toTypedArray() }.toTypedArray()
+            return Pair(coefs, consts)
         }
 
-        fun swapRows(i: Int, j: Int) {
-            coefs.swap(i, j)
-            consts.swap(i, j)
-        }
+        val machines = parseInput(load_test())
+        for ((lights, buttons, joltages) in machines) {
+            val (coefs, consts) = parse(buttons, joltages)
 
-        fun subtractRow(subtrFrom: Int, subtrWhat: Int, n: Int) {
-            for (ind in coefs[0].indices) {
-                coefs[subtrFrom][ind] -= coefs[subtrWhat][ind] * n
+            try {
+                solveLinearEqSystem(coefs, consts)
+            } catch (e: Throwable) {
+                println("Failed on joltages: " + joltages.joinToString(","))
+                val (coefs, consts) = parse(buttons, joltages)
+                println(utils.toString(coefs, consts, constsSeparator = " "))
+                e.printStackTrace()
+                return
             }
-            consts[subtrFrom] -= consts[subtrWhat] * n
-        }
-
-        fun divRow(rowInd: Int, div: Int) {
-            for (ind in coefs[0].indices) {
-                assert(coefs[rowInd][ind] % div == 0)
-                coefs[rowInd][ind] /= div
-            }
-            assert(consts[rowInd] % div == 0)
-            consts[rowInd] /= div
-        }
-
-        fun rowDivisible(rowInd: Int, n: Int) =
-            if (abs(n) == 1) true
-            else (consts[rowInd] % n == 0) && coefs[rowInd].all { it % n == 0 }
-
-        for (j in coefs[0].indices) {
-            // Find any row below j that has non-zero value at j and swap into j pos
-
-            val nonNullRowInd = coefs.withIndex()
-                .firstOrNull() { (index, row) -> index >= j && row[j] != 0 && rowDivisible(index, row[j]) }
-                ?.index
-            if (nonNullRowInd == null){
-                val check = coefs.withIndex().all { (index, row) -> index >= j && row[j] == 0 }
-                assert(check)
-            }
-
-            if (nonNullRowInd != null) {
-                if (!(coefs[nonNullRowInd][j] == 1)) {
-                    1 + 1
+            val pushes = consts.toList()
+            val state = joltages.map { 0 }.toMutableList()
+            for ((btn, n) in buttons.zip(pushes)) {
+                for (i in btn) {
+                    state[i] += n
                 }
-                swapRows(j, nonNullRowInd)
-                if (coefs[j][j] != 1) {
-                    //normalize row
-                    val div = coefs[j][j]
-                    divRow(j, div)
-                }
-                // make sure all following rows have 0 in j column by subtracting j row from it
-                for (k in (j + 1) until coefs.size) {
-                    val times = coefs[k][j]
-                    subtractRow(k, j, times)
-                }
-            } else {
-                1 + 1
-            }
-        }
-        for (j in coefs[0].indices.reversed()) {
-            for (k in 0 until j) {
-                val times = coefs[k][j]
-                subtractRow(k, j, times)
             }
         }
     }
-
 }
