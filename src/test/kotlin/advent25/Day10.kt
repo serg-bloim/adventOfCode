@@ -293,4 +293,36 @@ class Day10 {
             }
         }
     }
+
+    @Test
+    fun test_listOverflowLogic() {
+        val ofGen = OverflowGenerator(3)
+        val cnt = ofGen.generate({ solution -> solution.sum() <= 5 })
+            .onEach { sol -> println(sol) }
+            .onEach { sol -> assertTrue { sol.sum() <= 5 } }
+            .count()
+        assertEquals(56, cnt)
+    }
+
+    class OverflowGenerator(val n: Int) {
+        val state = MutableList(n) { 0 }
+        var ptr = 0
+        fun generate(callback: (List<Int>) -> Boolean): Sequence<List<Int>> =
+            sequence {
+                while (ptr < state.size) {
+                    val sol = state.toList()
+                    val resp = callback(sol)
+                    if (resp) {
+                        ptr = 0
+                        yield(sol)
+                        state[ptr]++
+                    } else {
+                        state[ptr] = 0
+                        ptr++
+                        if (ptr == state.size) break
+                        state[ptr]++
+                    }
+                }
+            }
+    }
 }
