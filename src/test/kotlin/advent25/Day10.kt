@@ -3,12 +3,11 @@ package advent25
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import utils.RateLimiter
-import utils.assertEquals
-import utils.result
-import utils.solveLinearEqSystem
+import utils.*
+import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
+import kotlin.test.assertTrue
 
 typealias Gradient = List<Double>
 
@@ -119,13 +118,112 @@ class Day10 {
 
         fun solve(txt: String): Any {
             val machines = parseInput(txt)
-            val total = machines.sumOf { (lightsGoal, buttons, joltage) ->
-                val pushes = getJoltagePushes(buttons, joltage)
-                logger.info { "Working on $joltage = $pushes" }
-                pushes
+            val total = machines.sumOf { (lightsGoal, buttons, joltages) ->
+                val consts = joltages.map { it.toFraction() }.toTypedArray()
+                val coefs = consts.indices.map { ind -> buttons.map { btn -> ind in btn }.map { if (it) 1.toFraction() else 0.toFraction() }.toTypedArray() }.toTypedArray()
+                println(toString(coefs, consts, constsSeparator = " "))
+                println("${coefs.size} x ${coefs[0].size + 1}")
+                println()
+                println()
+                solveLinearEqSystem(coefs, consts)
+                if (consts.any { it.toDouble() < 0 }) {
+                    logger.info { "\n" + toString(coefs, consts) + "\n\nfree vars:" + findFreeVarInds(coefs).size }
+
+                }
+                val minButtonPushes = generateNonNegativeSolutions(coefs, consts)
+                    .filter { buttonPushes -> buttonPushes.all { it.isWhole() } } // all vars are whole integer numbers
+                    .map { buttonPushes -> buttonPushes.map { it.toInt() } }
+                    .minOf { buttonPushes -> buttonPushes.sum() }
+                logger.info { "Min button pushes: $minButtonPushes" }
+                minButtonPushes
+                1L
             }
             return total
         }
+
+        private fun generateNonNegativeSolutions(coefs: Array<Array<Fraction>>, consts: Array<Fraction>): Sequence<Array<Fraction>> {
+            val freeVars: List<Int> = findFreeVarInds(coefs)
+            fun buildEq(varInd: Int): (Array<Fraction>) -> Unit {
+                val freeVar = 1 != coefs.count { row -> row[varInd].isNotZero() }
+                if (freeVar) return { }
+                val rowInd = coefs.indexOfFirst { row -> row[varInd].isNotZero() }
+                return { solution ->
+                    val a = solution.zip(coefs[rowInd]) { a, b -> a * b }.reduce { a, b -> a + b }
+                    val varVal = consts[rowInd] - a
+                    solution[varInd] = varVal
+                }
+            }
+
+            fun findMinMaxValidFreeVarValue(fvi: Int, solution: Array<Fraction>): IntRange {
+                val minValidValue = coefs.asSequence().zip(consts.asSequence())
+                    .filter { (row, cnst) ->
+                        row[fvi].isNegative()
+                    }
+                    .maxOfOrNull { (row, cnst) ->
+                        val freeVarMin = cnst.copy()
+                        for (earlierFreeVarInd in freeVars) {
+                            if (earlierFreeVarInd == fvi) break
+                            freeVarMin -= (row[earlierFreeVarInd] * solution[earlierFreeVarInd])
+                        }
+                        freeVarMin /= row[fvi]
+                        freeVarMin
+                    }?.ceiling() ?: 0
+                val maxValidValue = coefs.asSequence().zip(consts.asSequence())
+                    .filter { (row, cnst) ->
+                        row[fvi].isPositive()
+                    }
+                    .maxOfOrNull { (row, cnst) ->
+                        val freeVarMin = cnst.copy()
+                        for (earlierFreeVarInd in freeVars) {
+                            if (earlierFreeVarInd == fvi) break
+                            freeVarMin -= (row[earlierFreeVarInd] * solution[earlierFreeVarInd])
+                        }
+                        freeVarMin /= row[fvi]
+                        freeVarMin
+                    }?.floor() ?: Int.MAX_VALUE
+                return max(0, minValidValue)..maxValidValue
+            }
+
+            val solution = Array(coefs[0].size) { 0.toFraction() }
+            val freeVarRanges = freeVars.map { 0..Int.MAX_VALUE }.toTypedArray()
+            val freeVarVals = freeVarRanges.map { 0 }.toTypedArray()
+            var freeVarPtr = -1
+            return sequence {
+                outer@ do {
+                    // For each freeVar >= freeVarPtr reset the value to the first valid value
+                    for (index in freeVars.indices) {
+                        val fvi = freeVars[index]
+                        if (index > freeVarPtr) {
+                            val range = findMinMaxValidFreeVarValue(fvi, solution)
+                            if (range.size() <= 0) {
+                                // It's impossible to build
+                                freeVarVals[freeVarPtr]++
+                                if (freeVarVals[freeVarPtr] !in freeVarRanges[freeVarPtr]) freeVarPtr--
+                                continue@outer
+                            }
+                            freeVarRanges[index] = range
+                            freeVarVals[index] = freeVarRanges[index].first
+                        }
+
+                    }
+                    freeVarPtr = freeVars.lastIndex
+                    for (index in freeVars.indices) {
+                        val fvi = freeVars[index]
+                        val fvv = freeVarVals[index]
+                        solution[fvi] = fvv.toFraction()
+                    }
+                    // compute dependent vars
+                    yield(solution)
+                    while (true) {
+                        freeVarVals[freeVarPtr]++
+                        if (freeVarVals[freeVarPtr] in freeVarRanges[freeVarPtr]) break
+                        else freeVarPtr--
+                    }
+                } while (freeVarPtr >= 0)
+            }
+        }
+
+        private fun findFreeVarInds(coefs: Array<Array<Fraction>>) = coefs[0].indices.filter { varInd -> 1 != coefs.count { row -> row[varInd].isNotZero() } }
 
         fun getJoltagePushes(buttons: List<List<Int>>, goal: List<Int>): Int {
             val state = goal.map { 0 }.toMutableList()
@@ -272,17 +370,22 @@ class Day10 {
         }
 
         val machines = parseInput(load_test())
+        var assertionErrors = 0
+        var totalErrors = 0
+        var i = 0
         for ((lights, buttons, joltages) in machines) {
+            println(i++)
             val (coefs, consts) = parse(buttons, joltages)
 
             try {
                 solveLinearEqSystem(coefs, consts)
+            } catch (e: AssertionError) {
+                assertionErrors++
             } catch (e: Throwable) {
+                totalErrors++
                 println("Failed on joltages: " + joltages.joinToString(","))
                 val (coefs, consts) = parse(buttons, joltages)
                 println(utils.toString(coefs, consts, constsSeparator = " "))
-                e.printStackTrace()
-                return
             }
             val pushes = consts.toList()
             val state = joltages.map { 0 }.toMutableList()
@@ -292,6 +395,8 @@ class Day10 {
                 }
             }
         }
+        println("Total failed: $assertionErrors")
+        println("Total failed: $totalErrors")
     }
 
     @Test
@@ -326,3 +431,16 @@ class Day10 {
             }
     }
 }
+
+private fun Fraction.floor() =
+    if (isWhole()) toInt()
+    else toInt() - 1
+
+private fun Fraction.ceiling() =
+    if (isWhole()) toInt()
+    else toInt() + 1
+
+
+private fun Fraction.isNegative() = num * denom < 0
+
+private fun Fraction.isPositive() = num * denom > 0

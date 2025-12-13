@@ -4,7 +4,14 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.math.abs
 import kotlin.math.min
 
-data class Fraction(var num: Int, var denom: Int)
+data class Fraction(var num: Int, var denom: Int) : Comparable<Fraction> {
+    override fun compareTo(other: Fraction) = toDouble().compareTo(other.toDouble())
+
+    override fun toString(): String {
+        if (isWhole()) return num.toString()
+        return "$num/$denom"
+    }
+}
 
 fun Int.toFraction() = Fraction(this, 1)
 fun solveLinearEqSystem(coefs: Array<Array<Int>>, consts: Array<Int>) {
@@ -21,7 +28,9 @@ fun solveLinearEqSystem(coefs: Array<Array<Int>>, consts: Array<Int>) {
     }
 }
 
-private fun Fraction.toInt() = num / denom
+fun Fraction.toInt() = num / denom
+
+fun Fraction.toDouble() = num.toDouble() / denom
 
 fun solveLinearEqSystem(coefs: Array<Array<Fraction>>, consts: Array<Fraction>) {
     val logger = KotlinLogging.logger("solveLinearEqSystem")
@@ -40,9 +49,9 @@ fun solveLinearEqSystem(coefs: Array<Array<Fraction>>, consts: Array<Fraction>) 
     fun subtractRow(subtrFrom: Int, subtrWhat: Int, n: Fraction) {
         val n = n.copy()
         for (ind in coefs[0].indices) {
-            coefs[subtrFrom][ind] -= (coefs[subtrWhat][ind] * n)
+            coefs[subtrFrom][ind].minusAssign(coefs[subtrWhat][ind] * n)
         }
-        consts[subtrFrom] -= consts[subtrWhat] * n
+        consts[subtrFrom].minusAssign(consts[subtrWhat] * n)
     }
 
     fun divRow(rowInd: Int, div: Fraction) {
@@ -89,18 +98,23 @@ fun solveLinearEqSystem(coefs: Array<Array<Fraction>>, consts: Array<Fraction>) 
     }
 }
 
-private operator fun Fraction.divAssign(other: Fraction) {
+operator fun Fraction.divAssign(other: Fraction) {
     num *= other.denom
     denom *= other.num
     normalize()
 }
 
-private operator fun Fraction.times(other: Fraction) = Fraction(num * other.num, denom * other.denom).also { it.normalize() }
+operator fun Fraction.times(other: Fraction) = Fraction(num * other.num, denom * other.denom).also { it.normalize() }
 
-private fun Fraction.isZero() = num == 0
-private fun Fraction.isNotZero() = !isZero()
+fun Fraction.isZero() = num == 0
+fun Fraction.isNotZero() = !isZero()
 
-private operator fun Fraction.minusAssign(other: Fraction) {
+operator fun Fraction.plusAssign(other: Int) {
+    num += other * denom
+    normalize()
+}
+
+operator fun Fraction.minusAssign(other: Fraction) {
     if (denom == other.denom) {
         num -= other.num
     } else {
@@ -111,10 +125,26 @@ private operator fun Fraction.minusAssign(other: Fraction) {
     if (num == 0) denom = 1
 }
 
-private operator fun Fraction.times(other: Int): Fraction = Fraction(num * other, denom)
+operator fun Fraction.times(other: Int): Fraction = Fraction(num * other, denom)
 
-private fun Fraction.normalize() {
-    val gcf = getGCF(abs(num), abs(denom)) * if(denom < 0) -1 else 1
+operator fun Fraction.plus(other: Fraction): Fraction = Fraction((num * other.denom) + (other.num * denom), denom * other.denom).also { it.normalize() }
+
+operator fun Fraction.minus(other: Fraction): Fraction = Fraction((num * other.denom) - (other.num * denom), denom * other.denom).also { it.normalize() }
+
+operator fun Fraction.compareTo(n: Int) = when {
+    isWhole() && n == num -> 0
+    toInt() >= n -> 1
+    else -> -1
+}
+
+fun Fraction.isWhole(): Boolean {
+    if (denom != 1) normalize()
+    return denom == 1
+}
+
+fun Fraction.normalize() {
+    if (denom == 1) return
+    val gcf = getGCF(abs(num), abs(denom)) * if (denom < 0) -1 else 1
     num /= gcf
     denom /= gcf
 }
@@ -130,14 +160,22 @@ fun parseLinEqSystem(txt: String): Pair<Array<Array<Int>>, Array<Int>> =
     }.unzip()
         .let { (cfs, csts) -> Pair(cfs.toTypedArray(), csts.toTypedArray()) }
 
-fun toString(coefs: Array<Array<Int>>, consts: Array<Int>, indent: Boolean = true, constsSeparator: String = "|"): String {
+fun toString(coefs: Array<Array<String>>, consts: Array<String>, indent: Boolean = true, constsSeparator: String = "|"): String {
     val padding = if (indent) {
-        coefs.maxOf { it.maxOf { it.toString().length } }
+        coefs.maxOf { it.maxOf { it.length } }
     } else 0
     val txt = coefs.zip(consts) { row, cnst ->
-        val rowStr = row.joinToString(" ") { it.toString().padStart(padding) }
+        val rowStr = row.joinToString(" ") { it.padStart(padding) }
         "$rowStr $constsSeparator $cnst"
     }
         .joinToString("\n")
     return txt
+}
+
+fun toString(coefs: Array<Array<Int>>, consts: Array<Int>, indent: Boolean = true, constsSeparator: String = "|"): String {
+    return toString(coefs.map { row -> row.map { it.toString() }.toTypedArray() }.toTypedArray(), consts.map { it.toString() }.toTypedArray(), indent, constsSeparator)
+}
+
+fun toString(coefs: Array<Array<Fraction>>, consts: Array<Fraction>, indent: Boolean = true, constsSeparator: String = "|"): String {
+    return toString(coefs.map { row -> row.map { it.toString() }.toTypedArray() }.toTypedArray(), consts.map { it.toString() }.toTypedArray(), indent, constsSeparator)
 }
