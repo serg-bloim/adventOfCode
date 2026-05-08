@@ -130,19 +130,21 @@ class Day10 {
                     logger.info { "\n" + toString(coefs, consts) + "\n\nfree vars:" + findFreeVarInds(coefs).size }
 
                 }
+                var solutions = 0
                 val minButtonPushes = generateNonNegativeSolutions(coefs, consts)
                     .filter { buttonPushes -> buttonPushes.all { it.isWhole() } } // all vars are whole integer numbers
                     .map { buttonPushes -> buttonPushes.map { it.toInt() } }
+                    .onEach { solutions++ }
                     .minOf { buttonPushes -> buttonPushes.sum() }
-                logger.info { "Min button pushes: $minButtonPushes" }
+                logger.info { "Min button pushes: $minButtonPushes out of $solutions" }
                 minButtonPushes
-                1L
             }
             return total
         }
 
         private fun generateNonNegativeSolutions(coefs: Array<Array<Fraction>>, consts: Array<Fraction>): Sequence<Array<Fraction>> {
             val freeVars: List<Int> = findFreeVarInds(coefs)
+            logger.info { "System has free vars: $freeVars" }
             fun buildEq(varInd: Int): (Array<Fraction>) -> Unit {
                 val freeVar = 1 != coefs.count { row -> row[varInd].isNotZero() }
                 if (freeVar) return { }
@@ -154,10 +156,11 @@ class Day10 {
                 }
             }
 
+            val eqs = coefs[0].indices.map { ind -> buildEq(ind) }
             fun findMinMaxValidFreeVarValue(fvi: Int, solution: Array<Fraction>): IntRange {
                 val minValidValue = coefs.asSequence().zip(consts.asSequence())
                     .filter { (row, cnst) ->
-                        row[fvi].isNegative()
+                        fvi == row.indexOfLast { it.isNegative() } // Current freevar is negative and there are no more negatives in this row
                     }
                     .maxOfOrNull { (row, cnst) ->
                         val freeVarMin = cnst.copy()
@@ -170,9 +173,9 @@ class Day10 {
                     }?.ceiling() ?: 0
                 val maxValidValue = coefs.asSequence().zip(consts.asSequence())
                     .filter { (row, cnst) ->
-                        row[fvi].isPositive()
+                        row[fvi].isPositive() && row.indexOfLast { it.isNegative() } < fvi // Current freevar is positive and there are no negatives after it.
                     }
-                    .maxOfOrNull { (row, cnst) ->
+                    .minOfOrNull { (row, cnst) ->
                         val freeVarMin = cnst.copy()
                         for (earlierFreeVarInd in freeVars) {
                             if (earlierFreeVarInd == fvi) break
@@ -185,42 +188,49 @@ class Day10 {
             }
 
             val solution = Array(coefs[0].size) { 0.toFraction() }
-            val freeVarRanges = freeVars.map { 0..Int.MAX_VALUE }.toTypedArray()
-            val freeVarVals = freeVarRanges.map { 0 }.toTypedArray()
-            var freeVarPtr = -1
-            return sequence {
-                outer@ do {
-                    // For each freeVar >= freeVarPtr reset the value to the first valid value
-                    for (index in freeVars.indices) {
-                        val fvi = freeVars[index]
-                        if (index > freeVarPtr) {
-                            val range = findMinMaxValidFreeVarValue(fvi, solution)
-                            if (range.size() <= 0) {
-                                // It's impossible to build
-                                freeVarVals[freeVarPtr]++
-                                if (freeVarVals[freeVarPtr] !in freeVarRanges[freeVarPtr]) freeVarPtr--
-                                continue@outer
+            fun genFreeVarsRec(freeVars: List<Int>): Sequence<List<Int>> {
+                return sequence {
+                    val fvi = freeVars.first()
+                    val range = findMinMaxValidFreeVarValue(fvi, solution)
+                    logger.info { "FreeVar $fvi is in range: $range" }
+                    if (range.size() > 0) {
+                        if (freeVars.size == 1) {
+                            yieldAll(range.map { listOf(it) })
+                        } else {
+                            range.map { v-> Pair(v, ) }
+                            for (v in range) {
+                                solution[fvi] = v.toFraction()
+                                val seqOfNextFreeVars = genFreeVarsRec(freeVars.subList(1, freeVars.size))
+                                yieldAll(seqOfNextFreeVars.map { listOf(v) + it })
                             }
-                            freeVarRanges[index] = range
-                            freeVarVals[index] = freeVarRanges[index].first
                         }
-
                     }
-                    freeVarPtr = freeVars.lastIndex
-                    for (index in freeVars.indices) {
-                        val fvi = freeVars[index]
-                        val fvv = freeVarVals[index]
-                        solution[fvi] = fvv.toFraction()
-                    }
-                    // compute dependent vars
-                    yield(solution)
-                    while (true) {
-                        freeVarVals[freeVarPtr]++
-                        if (freeVarVals[freeVarPtr] in freeVarRanges[freeVarPtr]) break
-                        else freeVarPtr--
-                    }
-                } while (freeVarPtr >= 0)
+                }
             }
+            return genFreeVarsRec(freeVars)
+                .map { freeVarVals ->
+                    val sol = Array(coefs[0].size) { 0.toFraction() }
+                    freeVars.zip(freeVarVals).forEach { (ind, v) -> sol[ind] = v.toFraction() }
+                    eqs.forEach { eq -> eq(sol) }
+                    sol
+                }
+        }
+
+        @Test
+        fun test_generateNonNegativeSolutions() {
+            val problem = """
+                0 0 0 0 1 1  | 3
+                0 1 0 0 0 1  | 5
+                0 0 1 1 1 0  | 4
+                1 1 0 1 0 0  | 7
+            """.trimIndent()
+            val (coefs, consts) = parseLinEqSystem(problem).let { (coefs, consts) -> toFractions(coefs, consts) }
+            println("${consts.size} x ${coefs[0].size+1}")
+            println(toString(coefs, consts, constsSeparator = " "))
+            solveLinearEqSystem(coefs, consts)
+            println(toString(coefs, consts, constsSeparator = " "))
+            val solutions = generateNonNegativeSolutions(coefs, consts).toList()
+            assertEquals(5, solutions.size)
         }
 
         private fun findFreeVarInds(coefs: Array<Array<Fraction>>) = coefs[0].indices.filter { varInd -> 1 != coefs.count { row -> row[varInd].isNotZero() } }
@@ -294,6 +304,11 @@ class Day10 {
 
         private fun checkNoOverflow(state: MutableList<Int>, goal: List<Int>) = state.zip(goal).all { (s, g) -> s <= g }
     }
+
+    private fun toFractions(coefs: Array<Array<Int>>, consts: Array<Int>) = Pair(
+        coefs.map { row -> row.map { it.toFraction() }.toTypedArray() }.toTypedArray(),
+        consts.map { it.toFraction() }.toTypedArray()
+    )
 
     companion object {
         val res_prefix = this::class.java.enclosingClass.simpleName.lowercase()

@@ -138,12 +138,14 @@ class LinAlgebraTest {
         println(coefs)
         println(consts)
     }
+
     @Test
-    fun test_fractionCompareTo(){
+    fun test_fractionCompareTo() {
         assertTrue { Fraction(5, 2) > 2 }
         assertTrue { Fraction(5, 2) < 3 }
         assertTrue { Fraction(-5, 2) < -1 }
     }
+
     fun assertEqual(expectedLinEqSys: String, actualLinEqSys: String) {
         fun transform(txt: String): String {
             val (coefs, consts) = parseLinEqSystem(txt)
@@ -152,4 +154,11 @@ class LinAlgebraTest {
         assertEquals(transform(expectedLinEqSys), transform(actualLinEqSys))
     }
 
+    @Test
+    fun test_dropWhile() {
+        val seq = (0..30).asSequence()
+        seq.dropWhile { it.toString().length < 2 }
+            .takeWhile { it.toString().startsWith("1") }
+            .forEach { println(it) }
+    }
 }

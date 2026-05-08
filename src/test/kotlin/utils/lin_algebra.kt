@@ -144,9 +144,12 @@ fun Fraction.isWhole(): Boolean {
 
 fun Fraction.normalize() {
     if (denom == 1) return
-    val gcf = getGCF(abs(num), abs(denom)) * if (denom < 0) -1 else 1
-    num /= gcf
-    denom /= gcf
+    if (num == 0) denom = 1
+    else {
+        val gcf = getGCF(abs(num), abs(denom)) * if (denom < 0) -1 else 1
+        num /= gcf
+        denom /= gcf
+    }
 }
 
 fun getGCF(a: Int, b: Int) = greatestCommonDivisor(a.toLong(), b.toLong()).toInt()
